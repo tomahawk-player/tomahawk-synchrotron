@@ -1,0 +1,4 @@
+[resolvers]
+compression=zip
+packageSuffix=.tomahawkresolver.zip
+metadata=content/metadata.desktop

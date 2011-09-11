@@ -1,0 +1,13 @@
+[Desktop Entry]
+Name=Official.fm Resolver
+Comment=Searches Official.fm for playable tracks
+
+Type=Service
+X-KDE-ServiceTypes=Tomahawk/Resolver
+
+X-KDE-PluginInfo-Name=officialfm
+X-KDE-PluginInfo-Author=lasconic
+X-KDE-PluginInfo-Email=lasconic@gmail.com
+X-KDE-PluginInfo-Version=0.1
+X-KDE-PluginInfo-Website=http://gettomahawk.com
+
