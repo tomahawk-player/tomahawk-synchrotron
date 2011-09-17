@@ -1,0 +1,15 @@
+[Desktop Entry]
+Name=8Tracks Resolver
+Comment=Searches 8tracks.com for music
+
+Type=Service
+X-KDE-ServiceTypes=Tomahawk/Resolver
+X-Synchrotron-MainScript=contents/code/8tracks.js
+
+X-KDE-PluginInfo-Name=8tracks
+X-KDE-PluginInfo-Category=Resolver
+X-KDE-PluginInfo-Author=dz0ny
+X-KDE-PluginInfo-Email=
+X-KDE-PluginInfo-Version=0.1
+X-KDE-PluginInfo-Website=http://gettomahawk.com
+

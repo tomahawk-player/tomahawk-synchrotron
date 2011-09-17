@@ -1,15 +1,15 @@
 [Desktop Entry]
-Name=Dilandau Resolver
-Comment=Uses mp3 search engine http://www.dilandau.eu/ to find tracks
+Name=Jamendo Resolver
+Comment=Searches Jamendo's free music database
 
 Type=Service
 X-KDE-ServiceTypes=Tomahawk/Resolver
-X-Synchrotron-MainScript=contents/code/dilandau.js
+X-Synchrotron-MainScript=contents/code/jamendo.js
 
-X-KDE-PluginInfo-Name=dilandau
+X-KDE-PluginInfo-Name=jamendo
 X-KDE-PluginInfo-Category=Resolver
 X-KDE-PluginInfo-Author=lasconic
-X-KDE-PluginInfo-Email=
+X-KDE-PluginInfo-Email=lasconic@gmail.com
 X-KDE-PluginInfo-Version=0.1
 X-KDE-PluginInfo-Website=http://gettomahawk.com
 

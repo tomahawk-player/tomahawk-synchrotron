@@ -4,8 +4,10 @@ Comment=Connects to an ampache server and resolves tracks.
 
 Type=Service
 X-KDE-ServiceTypes=Tomahawk/Resolver
+X-Synchrotron-MainScript=contents/code/ampache.js
 
 X-KDE-PluginInfo-Name=ampache
+X-KDE-PluginInfo-Category=Resolver
 X-KDE-PluginInfo-Author=Dominik Schmidt
 X-KDE-PluginInfo-Email=dev@dominik-schmidt.de
 X-KDE-PluginInfo-Version=0.1

@@ -4,8 +4,10 @@ Comment=Searches Official.fm for playable tracks
 
 Type=Service
 X-KDE-ServiceTypes=Tomahawk/Resolver
+X-Synchrotron-MainScript=contents/code/officialfm.js
 
 X-KDE-PluginInfo-Name=officialfm
+X-KDE-PluginInfo-Category=Resolver
 X-KDE-PluginInfo-Author=lasconic
 X-KDE-PluginInfo-Email=lasconic@gmail.com
 X-KDE-PluginInfo-Version=0.1

@@ -1,0 +1,15 @@
+[Desktop Entry]
+Name=Last.fm Resolver
+Comment=Looks for full tracks to play from Last.fm
+
+Type=Service
+X-KDE-ServiceTypes=Tomahawk/Resolver
+X-Synchrotron-MainScript=contents/code/lastfm.js
+
+X-KDE-PluginInfo-Name=lastfm
+X-KDE-PluginInfo-Category=Resolver
+X-KDE-PluginInfo-Author=
+X-KDE-PluginInfo-Email=
+X-KDE-PluginInfo-Version=0.1
+X-KDE-PluginInfo-Website=http://gettomahawk.com
+
