@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=Grooveshark Resolver
-Comment=Searches Grooveshark for playable tracks
+Comment=Searches Grooveshark for playable tracks. Requires premium account.
 
 Type=Service
 X-KDE-ServiceTypes=Tomahawk/Resolver
