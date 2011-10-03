@@ -1,0 +1,15 @@
+[Desktop Entry]
+Name=Grooveshark Resolver
+Comment=Searches Grooveshark for playable tracks
+
+Type=Service
+X-KDE-ServiceTypes=Tomahawk/Resolver
+X-Synchrotron-MainScript=contents/code/grooveshark.js
+
+X-KDE-PluginInfo-Name=fgrooveshark
+X-KDE-PluginInfo-Category=Resolver
+X-KDE-PluginInfo-Author=Leo Franchi
+X-KDE-PluginInfo-Email=lfranchi@kde.org
+X-KDE-PluginInfo-Version=0.3
+X-KDE-PluginInfo-Website=http://gettomahawk.com
+
