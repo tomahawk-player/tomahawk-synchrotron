@@ -6,7 +6,7 @@ Type=Service
 X-KDE-ServiceTypes=Tomahawk/Resolver
 X-Synchrotron-MainScript=contents/code/grooveshark.js
 
-X-KDE-PluginInfo-Name=fgrooveshark
+X-KDE-PluginInfo-Name=grooveshark
 X-KDE-PluginInfo-Category=Resolver
 X-KDE-PluginInfo-Author=Leo Franchi
 X-KDE-PluginInfo-Email=lfranchi@kde.org
