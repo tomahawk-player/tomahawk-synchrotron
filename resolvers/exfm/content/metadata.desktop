@@ -1,0 +1,15 @@
+[Desktop Entry]
+Name=exfm Resolver
+Comment=Searches ex.fm for playable tracks
+
+Type=Service
+X-KDE-ServiceTypes=Tomahawk/Resolver
+X-Synchrotron-MainScript=contents/code/exfm.js
+
+X-KDE-PluginInfo-Name=exfm
+X-KDE-PluginInfo-Category=Resolver
+X-KDE-PluginInfo-Author=lasconic
+X-KDE-PluginInfo-Email=lasconic@gmail.com
+X-KDE-PluginInfo-Version=0.1
+X-KDE-PluginInfo-Website=http://gettomahawk.com
+
