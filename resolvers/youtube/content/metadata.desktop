@@ -1,0 +1,15 @@
+[Desktop Entry]
+Name=Youtube Resolver
+Comment=Searches YouTube for audio content.
+
+Type=Service
+X-KDE-ServiceTypes=Tomahawk/Resolver
+X-Synchrotron-MainScript=contents/code/youtube.js
+
+X-KDE-PluginInfo-Name=youtube
+X-KDE-PluginInfo-Category=Resolver
+X-KDE-PluginInfo-Author=Leo Franchi
+X-KDE-PluginInfo-Email=lfranchi@kde.org
+X-KDE-PluginInfo-Version=0.1
+X-KDE-PluginInfo-Website=http://gettomahawk.com
+
