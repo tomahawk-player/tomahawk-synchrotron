@@ -87,7 +87,7 @@ var YoutubeResolver = Tomahawk.extend(TomahawkResolver,
                                 results.push(result);
                             }
                         } else if (xmlHttpRequest.readyState === 4) {
-                            Tomahawk.log("Failed to do GET request to: " + url);
+                            Tomahawk.log("Failed to do GET request to: " + result.url);
                             Tomahawk.log("Status Code was: " + xmlHttpRequest.status);
                         }
 

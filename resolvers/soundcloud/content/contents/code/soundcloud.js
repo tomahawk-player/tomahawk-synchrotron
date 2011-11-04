@@ -56,11 +56,11 @@ var SoundcloudResolver = Tomahawk.extend(TomahawkResolver, {
 	parseSongResponse: function (qid, artist, title, responseString) {
 		var userConfig = this.getUserConfig();
 		var results = new Array();
-		if (responseString !== null) {
+		if (responseString !== undefined) {
 			for (i = 0; i < responseString.length; i++) {
 				var result = new Object();
 				result.artist = artist;
-				if (responseString[i].title != undefined && responseString[i].title.search(new RegExp(artist, "gi")) != -1 && responseString[i].title.search(new RegExp(title, "gi")) != -1 && this.getTrack(responseString[i].title, title)){
+				if (responseString[i].title !== undefined && responseString[i].title.search(new RegExp(artist, "gi")) !== -1 && responseString[i].title.search(new RegExp(title, "gi")) !== -1 && this.getTrack(responseString[i].title, title)){
 					result.track = title;
 				}
 				else {
