@@ -2,7 +2,7 @@ var YoutubeResolver = Tomahawk.extend(TomahawkResolver,
 {
     settings:
     {
-            name: 'Youtube',
+            name: 'YouTube',
             weight: 70,
             timeout: 15
     },
@@ -12,19 +12,18 @@ var YoutubeResolver = Tomahawk.extend(TomahawkResolver,
         };
     },
     decodeUrl: function (url) {
-        // Some crazy replacement going on overhere! lol
-        return url.replace(/%25252C/g, ",").replace(/%20/g, " ").replace(/%3A/g, ":").replace(/%252F/g, "/").replace(/%253F/g, "?").replace(/%252C/g, ",").replace(/%253D/g, "=").replace(/%2526/g, "&").replace(/%26/g, "&").replace(/%3D/g, "=");
+      // Some crazy replacement going on overhere! lol
+      return url.replace(/%2B/g, "+").replace(/%253A/g, ":").replace(/%25252C/g, ",").replace(/%20/g, " ").replace(/%3A/g, ":").replace(/%252F/g, "/").replace(/%253F/g, "?").replace(/%252C/g, ",").replace(/%253D/g, "=").replace(/%2526/g, "&").replace(/%26/g, "&").replace(/%3D/g, "=");
 
     },
     parseVideoUrlFromYtPage: function (html) {
-        var magic = "url_encoded_fmt_stream_map=";
-        var magicFmt = "18";
-        var magicLimit = "fallback_host";
-        var pos = html.indexOf(magic) + magic.length;
-        html = html.slice(pos);
-        html = html.slice(html.indexOf(magicFmt + magicLimit) + (magic + magicLimit).length);
-        finalUrl = html.slice(0, html.indexOf(magicLimit));
-        return "http://o-o.preferred." + this.decodeUrl(finalUrl);
+      var magic = "url_encoded_fmt_stream_map=";
+      var magicLimit = "fallback_host"; //TODO find magic limit including fallback urls..
+      var pos = html.indexOf(magic) + magic.length;
+      html = html.slice(pos);
+      // We want to remove the url= in the url_encoded_fmt_stream_map var ( that is 6, as "=" means unicode)
+      finalUrl = html.slice(6, html.indexOf(magicLimit));
+      return this.decodeUrl(finalUrl);
     },
     searchYoutube: function( qid, query, limit, title, artist ) {
         var apiQuery = "http://gdata.youtube.com/feeds/api/videos?q=" + query + "&v=2&alt=jsonc&quality=medium&max-results=" + limit;
