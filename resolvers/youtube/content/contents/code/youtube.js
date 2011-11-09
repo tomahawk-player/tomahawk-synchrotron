@@ -17,7 +17,7 @@ var YoutubeResolver = Tomahawk.extend(TomahawkResolver,
 
     },
     parseVideoUrlFromYtPage: function (html) {
-        var magic = "url_encoded_fmt_stream_map";
+        var magic = "url_encoded_fmt_stream_map=";
         var magicFmt = "18";
         var magicLimit = "fallback_host";
         var pos = html.indexOf(magic) + magic.length;
