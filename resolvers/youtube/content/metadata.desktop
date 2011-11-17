@@ -1,5 +1,5 @@
 [Desktop Entry]
-Name=Youtube Resolver
+Name=YouTube Resolver
 Comment=Searches YouTube for audio content.
 
 Type=Service
@@ -8,8 +8,8 @@ X-Synchrotron-MainScript=contents/code/youtube.js
 
 X-KDE-PluginInfo-Name=youtube
 X-KDE-PluginInfo-Category=Resolver
-X-KDE-PluginInfo-Author=Hugo and  Leo
+X-KDE-PluginInfo-Author=Hugo, Leo and Thierry
 X-KDE-PluginInfo-Email=lfranchi@kde.org
-X-KDE-PluginInfo-Version=0.6
+X-KDE-PluginInfo-Version=0.7
 X-KDE-PluginInfo-Website=http://gettomahawk.com
 
