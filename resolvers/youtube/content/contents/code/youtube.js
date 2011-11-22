@@ -1,5 +1,5 @@
 var YoutubeResolver = Tomahawk.extend(TomahawkResolver, {
-	
+
 	getConfigUi: function () {
 		var uiData = Tomahawk.readBase64("config.ui");
 		return {
@@ -36,14 +36,14 @@ var YoutubeResolver = Tomahawk.extend(TomahawkResolver, {
 			this.qualityPreference = userConfig.qualityPreference;
 		}
 	},
-	
+
 	settings:
 	{
 		name: 'YouTube',
 		weight: 70,
 		timeout: 15
 	},
-	
+
 	getTrack: function (trackTitle, origTitle) {
 		if ((this.includeCovers === false || this.includeCovers === undefined) && trackTitle.search(/cover/i) !== -1 && origTitle.search(/cover/i) === -1){
 			return null;
@@ -58,13 +58,13 @@ var YoutubeResolver = Tomahawk.extend(TomahawkResolver, {
 			return trackTitle;
 		}
 	},
-		
+
 	init: function() {
 		String.prototype.capitalize = function(){
 		return this.replace( /(^|\s)([a-z])/g , function(m,p1,p2){ return p1+p2.toUpperCase(); } );
 		};
 	},
-	
+
 	parseVideoUrlFromYtPage: function (html) {
 		var magic = "url_encoded_fmt_stream_map\": \"url=";
 		var magicLimit = "\", ";
@@ -133,7 +133,7 @@ var YoutubeResolver = Tomahawk.extend(TomahawkResolver, {
 		}
 		return finalUrl;
 	},
-	
+
 	searchYoutube: function( qid, query, limit, title, artist ) {
 		var apiQuery = "http://gdata.youtube.com/feeds/api/videos?q=" + query + "&v=2&alt=jsonc&quality=medium&max-results=" + limit;
 		apiQuery = apiQuery.replace(/\%20/g, '\+');
@@ -143,7 +143,7 @@ var YoutubeResolver = Tomahawk.extend(TomahawkResolver, {
 			if (resp.data.totalItems === 0){
 				return;
 			}
-			
+
 			var results = [];
 			var stop = Math.min(limit, resp.data.totalItems);
 			for (i = 0; i < Math.min(limit, resp.data.totalItems); i++) {
@@ -157,19 +157,42 @@ var YoutubeResolver = Tomahawk.extend(TomahawkResolver, {
 					stop = stop -1;
 					continue;
 				}
-	
+
 				// Check whether the artist and title (if set) are in the returned title, discard otherwise
 				if (resp.data.items[i].title !== undefined && resp.data.items[i].title.toLowerCase().indexOf(artist.toLowerCase()) === -1 || (title !== "" && resp.data.items[i].title.toLowerCase().indexOf(title.toLowerCase()) === -1)) {
 					stop = stop - 1;
 					continue;
 				}
-				var result = new Object();
-				if (artist !== "") {
-					result.artist = artist;
-				}
+
 				if (that.getTrack(resp.data.items[i].title, title)){
-					if (title !== ""){
+					var result = new Object();
+					if (artist !== "") {
+						result.artist = artist;
+					}
+
+
+					result.source = that.settings.name;
+					result.mimetype = "video/h264";
+					//result.bitrate = 128;
+					result.duration = resp.data.items[i].duration;
+					result.score = 0.85;
+					result.year = resp.data.items[i].uploaded.slice(0,4);
+
+					if(title !== ""){
 						result.track = title;
+						var self = that;
+						results.push(result);
+						Tomahawk.asyncRequest(resp.data.items[i].player['default'], function(xhr2){
+							result.url = self.parseVideoUrlFromYtPage(xhr2.responseText);
+							if (result.url !== undefined && result.url.indexOf("http") === 0 && result.url.indexOf("</body>") === -1) {
+								var resolveReturn = {
+									results: [results[0]],
+									qid: qid
+								};
+								Tomahawk.addTrackResults(resolveReturn);
+							}
+						});
+						i = Math.min(limit, resp.data.totalItems);
 					}
 					else {
 						if (resp.data.items[i].title.toLowerCase().indexOf(artist.toLowerCase() + " - ") === 0){
@@ -178,64 +201,46 @@ var YoutubeResolver = Tomahawk.extend(TomahawkResolver, {
 						else {
 							result.track = resp.data.items[i].title; // remove artist from here
 						}
+						(function(i, qid, result) {
+							var xmlHttpRequest = new XMLHttpRequest();
+							xmlHttpRequest.open('GET', resp.data.items[i].player['default'], true);
+							xmlHttpRequest.onreadystatechange = function() {
+								if (xmlHttpRequest.readyState === 4){
+									if(xmlHttpRequest.status === 200) {
+										result.url = that.parseVideoUrlFromYtPage(xmlHttpRequest.responseText);
+										if (result.url !== undefined && result.url.indexOf("http") === 0 && result.url.indexOf("</body>") === -1) {
+											results.push(result);
+											stop = stop - 1;
+										}
+										else {
+											stop = stop - 1;
+										}	
+									}
+									else {
+										Tomahawk.log("Failed to do GET request to: " + resp.data.items[i].player['default']);
+										Tomahawk.log("Error: " + xmlHttpRequest.status + " " + xmlHttpRequest.statusText);
+									}
+								}
+								if (stop === 0) {
+									var toReturn = {
+										results: results,
+										qid: qid
+									};
+									Tomahawk.addTrackResults(toReturn);
+								}
+							};
+							xmlHttpRequest.send(null);
+						})(i, qid, result);
 					}
 				}
 				else {
 					stop = stop - 1;
 					continue;
 				}
-	
-				
-				result.source = that.settings.name;
-				result.mimetype = "video/h264";
-				//result.bitrate = 128;
-				result.duration = resp.data.items[i].duration;
-				result.score = 0.85;
-				result.year = resp.data.items[i].uploaded.slice(0,4);
-				
-				(function(i, qid, result) {
-					var xmlHttpRequest = new XMLHttpRequest();
-					xmlHttpRequest.open('GET', resp.data.items[i].player['default'], true);
-					xmlHttpRequest.onreadystatechange = function() {
-						if (xmlHttpRequest.readyState === 4){
-							if(xmlHttpRequest.status === 200) {
-								result.url = that.parseVideoUrlFromYtPage(xmlHttpRequest.responseText);
-								if (result.url !== undefined && result.url.indexOf("http") === 0 && result.url.indexOf("</body>") === -1) {
-									results.push(result);
-									stop = stop - 1;
-								}
-								else {
-									stop = stop - 1;
-								}	
-							}
-							else {
-								Tomahawk.log("Failed to do GET request to: " + resp.data.items[i].player['default']);
-								Tomahawk.log("Error: " + xmlHttpRequest.status + " " + xmlHttpRequest.statusText);
-							}
-						}
-						if (stop === 0) {
-							var toReturn = {
-								results: results,
-								qid: qid
-							};
-							if (title !== ""){ // resolve
-								var resolveReturn = {
-									results: [toReturn.results[0]],
-									qid: qid
-								};
-								Tomahawk.addTrackResults(resolveReturn);
-							}
-							else { // search
-								Tomahawk.addTrackResults(toReturn);
-							}
-						}
-					};
-					xmlHttpRequest.send(null);
-				})(i, qid, result);
 			}
 		});
 	},
-	
+
 	resolve: function(qid, artist, album, title)
 	{
 		if (artist !== "") {
@@ -247,7 +252,7 @@ var YoutubeResolver = Tomahawk.extend(TomahawkResolver, {
 
 		this.searchYoutube(qid, query, 10, title, artist);
 	},
-	
+
 	search: function( qid, searchString )
 	{
 		// First we get the artist name out of the search string with echonest's artist/extract function
