@@ -91,7 +91,7 @@ var YoutubeResolver = Tomahawk.extend(TomahawkResolver, {
 			}
 		}
 		var finalUrl;
-		if(!this.qualityPreference){
+		if(this.qualityPreference === undefined){
 			this.qualityPreference = 1;
 		}		
 		if(this.qualityPreference === 0){
