@@ -1,128 +1,157 @@
-var AmpacheResolver = Tomahawk.extend(TomahawkResolver,
-{
+var AmpacheResolver = Tomahawk.extend(TomahawkResolver, {
     ready: false,
     artists: {},
     albums: {},
-    settings:
-    {
+    settings: {
         name: 'Ampache Resolver',
-        weigth: 85,
+        weight: 85,
         timeout: 5,
         limit: 10
     },
-    getConfigUi: function()
-    {
+    getConfigUi: function () {
         var uiData = Tomahawk.readBase64("config.ui");
         return {
 
             "widget": uiData,
-            fields: [
-                { name: "username", widget: "usernameLineEdit", property: "text" },
-                { name: "password", widget: "passwordLineEdit", property: "text" },
-                { name: "ampache", widget: "ampacheLineEdit", property: "text" }
-            ],
-            images: [
-                { "owncloud.png" : Tomahawk.readBase64("owncloud.png") },
-                { "ampache.png" : Tomahawk.readBase64("ampache.png") }
-            ]
+            fields: [{
+                name: "username",
+                widget: "usernameLineEdit",
+                property: "text"
+            }, {
+                name: "password",
+                widget: "passwordLineEdit",
+                property: "text"
+            }, {
+                name: "ampache",
+                widget: "ampacheLineEdit",
+                property: "text"
+            }],
+            images: [{
+                "owncloud.png": Tomahawk.readBase64("owncloud.png")
+            }, {
+                "ampache.png": Tomahawk.readBase64("ampache.png")
+            }]
         };
     },
-    init: function()
-    {
+    newConfigSaved: function () {
+        var userConfig = this.getUserConfig();
+        if ((userConfig.username != this.username) || (userConfig.password != this.password) || (userConfig.ampache != this.ampache)) {
+            Tomahawk.log("Saving new Ampache credentials with username:" << userConfig.username);
+
+            this.username = userConfig.username;
+            this.password = userConfig.password;
+            this.ampache = userConfig.ampache;
+
+            window.sessionStorage["ampacheAuth"] = "";
+            this.init();
+        }
+    },
+    init: function () {
         // check resolver is properly configured
         var userConfig = this.getUserConfig();
-        if( !userConfig.username || !userConfig.password || !userConfig.ampache )
-        {
+        if (!userConfig.username || !userConfig.password || !userConfig.ampache) {
             Tomahawk.log("Ampache Resolver not properly configured!");
             return;
         }
 
         // don't do anything if we already have a valid auth token
-        if( window.sessionStorage["ampacheAuth"] )
-        {
+        if (window.sessionStorage["ampacheAuth"]) {
             Tomahawk.log("Ampache resolver not using auth token from sessionStorage");
             return window.sessionStorage["ampacheAuth"];
         }
 
+        this.username = userConfig.username;
+        this.password = userConfig.password;
+        this.ampache = userConfig.ampache;
+
         // prepare handshake arguments
         var time = Tomahawk.timestamp();
-        var key = Tomahawk.sha256( userConfig.password );
-        var passphrase = Tomahawk.sha256( time + key );
+        var key = Tomahawk.sha256(this.password);
+        var passphrase = Tomahawk.sha256(time + key);
 
         // do the handshake
         var params = {
             timestamp: time,
             version: 350001,
-            user: userConfig.username
+            user: this.username
         }
-        try { handshakeResult = this.apiCall( 'handshake', passphrase, params ); }
-            catch(e) { return; }
+        try {
+            var that = this;
+            this.apiCall('handshake', passphrase, params, function (xhr) {
 
-        Tomahawk.log(handshakeResult);
+                Tomahawk.log(xhr.responseText);
 
-        // parse the result
-        var domParser = new DOMParser();
-        xmlDoc = domParser.parseFromString(handshakeResult, "text/xml");
-        var roots = xmlDoc.getElementsByTagName("root");
-        this.auth = roots[0] === undefined ? false : Tomahawk.valueForSubNode( roots[0], "auth" );
-        var pingInterval = parseInt(roots[0] === undefined ? 0 : Tomahawk.valueForSubNode( roots[0], "session_length" ))*1000;
+                // parse the result
+                var domParser = new DOMParser();
+                xmlDoc = domParser.parseFromString(xhr.responseText, "text/xml");
+                var roots = xmlDoc.getElementsByTagName("root");
+                that.auth = roots[0] === undefined ? false : Tomahawk.valueForSubNode(roots[0], "auth");
+                var pingInterval = parseInt(roots[0] === undefined ? 0 : Tomahawk.valueForSubNode(roots[0], "session_length")) * 1000;
 
-        // inform the user if something went wrong
-        if( !this.auth )
-        {
-            Tomahawk.log("INVALID HANDSHAKE RESPONSE: " + handshakeResult);
+                // inform the user if something went wrong
+                if (!that.auth) {
+                    Tomahawk.log("INVALID HANDSHAKE RESPONSE: " + xhr.responseText);
+                }
+
+                // all fine, set the resolver to ready state
+                that.ready = true;
+                window.sessionStorage["ampacheAuth"] = that.auth;
+
+                // setup pingTimer
+                if (pingInterval) window.setInterval(that.ping, pingInterval - 60);
+
+                Tomahawk.log("Ampache Resolver properly initialised!");
+
+            });
+        } catch (e) {
+            Tomahawk.log("Caught exception in Ampache resolver doing auth handshake request");
+            return;
         }
-
-        // all fine, set the resolver to ready state
-        this.ready = true;
-        window.sessionStorage["ampacheAuth"] = this.auth;
-
-        // setup pingTimer
-        if( pingInterval )
-            window.setInterval(this.ping, pingInterval-60);
-
-        Tomahawk.log("Ampache Resolver properly initialised!");
     },
-    apiCall: function(action, auth, params)
-    {
-        var ampacheUrl = this.getUserConfig().ampache + "/server/xml.server.php?";
-        if( params === undefined ) params = [];
+    generateUrl: function (action, auth, params) {
+        var ampacheUrl = this.ampache + "/server/xml.server.php?";
+        if (params === undefined) params = [];
         params['action'] = action;
         params['auth'] = auth;
 
 
-        for(param in params)
-        {
-            if( typeof( params[param] ) == 'string' )
-                params[param] = params[param].trim();
+        for (param in params) {
+            if (typeof (params[param]) == 'string') params[param] = params[param].trim();
 
-            ampacheUrl += encodeURIComponent( param ) + "=" + encodeURIComponent( params[param] ) + "&";
+            ampacheUrl += encodeURIComponent(param) + "=" + encodeURIComponent(params[param]) + "&";
         }
-        var result = Tomahawk.syncRequest(ampacheUrl);
-        //Tomahawk.log( result );
-        return result;
+        return ampacheUrl;
     },
-    ping: function()
-    {
+
+    apiCallSync: function (action, auth, params) {
+        var ampacheUrl = this.generateUrl(action, auth, params);
+
+        return Tomahawk.syncRequest(ampacheUrl, callback);
+    },
+
+    apiCall: function (action, auth, params, callback) {
+        var ampacheUrl = this.generateUrl(action, auth, params);
+
+        Tomahawk.asyncRequest(ampacheUrl, callback);
+    },
+
+    ping: function () {
         // this is called from window scope (setInterval), so we need to make methods and data accessible from there
-        Tomahawk.log( AmpacheResolver.apiCall( 'ping', AmpacheResolver.auth, {} ) );
+        Tomahawk.log(AmpacheResolver.apiCall('ping', AmpacheResolver.auth, {}, function () {}));
     },
-    parseSongResponse: function( qid, responseString )
-    {
+    parseSongResponse: function (qid, responseString) {
         // parse xml
         var domParser = new DOMParser();
-        xmlDoc = domParser.parseFromString( responseString, "text/xml");
+        xmlDoc = domParser.parseFromString(responseString, "text/xml");
 
         var results = new Array();
         // check the repsonse
         var songElements = xmlDoc.getElementsByTagName("song")[0];
-        if( songElements !==undefined && songElements.childNodes.length > 0)
-        {
+        if (songElements !== undefined && songElements.childNodes.length > 0) {
             var songs = xmlDoc.getElementsByTagName("song");
 
             // walk through the results and store it in 'results'
-            for(var i=0;i<songs.length;i++)
-            {
+            for (var i = 0; i < songs.length; i++) {
                 var song = songs[i];
 
                 var result = {
@@ -144,21 +173,21 @@ var AmpacheResolver = Tomahawk.extend(TomahawkResolver,
         }
 
         // prepare the return
-        var return1 =  {
+        var return1 = {
             qid: qid,
             results: results
         };
 
+        Tomahawk.addTrackResults(return1);
         //Tomahawk.dumpResult( return1 );
-        return return1;
     },
-    resolve: function( qid, artist, album, title )
-    {
-        return this.search( qid, title );
+    resolve: function (qid, artist, album, title) {
+        return this.search(qid, title);
     },
-    search: function( qid, searchString )
-    {
-        if( !this.ready ) return { qid: qid };
+    search: function (qid, searchString) {
+        if (!this.ready) return {
+            qid: qid
+        };
 
         userConfig = this.getUserConfig();
 
@@ -166,31 +195,30 @@ var AmpacheResolver = Tomahawk.extend(TomahawkResolver,
             filter: searchString,
             limit: this.settings.limit
         };
-        var searchResult = this.apiCall( "search_songs", this.auth, params );
+
+        var that = this;
+        this.apiCall("search_songs", AmpacheResolver.auth, params, function (xhr) {
+            that.parseSongResponse(qid, xhr.responseText);
+        });
 
         //Tomahawk.log( searchResult );
-
-        return this.parseSongResponse( qid, searchResult );
     },
-    getArtists: function( qid )
-    {
-        var searchResult = this.apiCall( "artists", this.auth );
+    getArtists: function (qid) {
+        var searchResult = this.apiCallSync("artists", AmpacheResolver.auth);
 
-        Tomahawk.log( searchResult );
+        Tomahawk.log(searchResult);
 
         // parse xml
         var domParser = new DOMParser();
-        xmlDoc = domParser.parseFromString( searchResult, "text/xml");
+        xmlDoc = domParser.parseFromString(searchResult, "text/xml");
 
         var results = [];
 
         // check the repsonse
         var root = xmlDoc.getElementsByTagName("root")[0];
-        if( root !==undefined && root.childNodes.length > 0)
-        {
+        if (root !== undefined && root.childNodes.length > 0) {
             var artists = xmlDoc.getElementsByTagName("artist");
-            for(var i=0;i<artists.length;i++)
-            {
+            for (var i = 0; i < artists.length; i++) {
                 artistName = Tomahawk.valueForSubNode(artists[i], "name");
                 artistId = artists[i].getAttribute("id");
 
@@ -201,38 +229,34 @@ var AmpacheResolver = Tomahawk.extend(TomahawkResolver,
 
         return results;
     },
-    getAlbums: function( artist )
-    {
+    getAlbums: function (artist) {
         var artistId = this.artists[artist];
 
         var params = {
             filter: artistId
         };
 
-        var searchResult = this.apiCall( "artist_albums", this.auth, params );
+        var searchResult = this.apiCallSync("artist_albums", AmpacheResolver.auth, params);
 
         //Tomahawk.log( searchResult );
-
         // parse xml
         var domParser = new DOMParser();
-        xmlDoc = domParser.parseFromString( searchResult, "text/xml");
+        xmlDoc = domParser.parseFromString(searchResult, "text/xml");
 
         var results = [];
 
         // check the repsonse
         var root = xmlDoc.getElementsByTagName("root")[0];
-        if( root !==undefined && root.childNodes.length > 0)
-        {
+        if (root !== undefined && root.childNodes.length > 0) {
             var albums = xmlDoc.getElementsByTagName("album");
-            for(var i=0;i<albums.length;i++)
-            {
+            for (var i = 0; i < albums.length; i++) {
                 albumName = Tomahawk.valueForSubNode(albums[i], "name");
                 albumId = albums[i].getAttribute("id");
 
                 results.push(albumName);
 
                 artistObject = this.albums[artist];
-                if( artistObject === undefined ) artistObject = {};
+                if (artistObject === undefined) artistObject = {};
                 artistObject[albumName] = albumId;
                 this.albums[artist] = artistObject;
             }
@@ -240,23 +264,21 @@ var AmpacheResolver = Tomahawk.extend(TomahawkResolver,
 
         return results;
     },
-    getTracks: function( artist, album )
-    {
+    getTracks: function (artist, album) {
         var artistObject = this.albums[artist];
         var albumId = artistObject[albumName];
-        Tomahawk.log("AlbumId for "+ artist + " - " + album + ": " + albumId  );
+        Tomahawk.log("AlbumId for " + artist + " - " + album + ": " + albumId);
 
 
         var params = {
             filter: albumId
         };
 
-        var searchResult = this.apiCall( "album_songs", this.auth, params );
+        var searchResult = this.apiCallSync("album_songs", AmpacheResolver.auth, params);
 
         //Tomahawk.log( searchResult );
 
-
-        return this.parseSongResponse( 1337, searchResult );
+        return this.parseSongResponse(1337, searchResult);
     }
 });
 
@@ -307,7 +329,6 @@ var resolver = Tomahawk.resolver.instance;
 // //Tomahawk.log("Resolve: " + resolve.artist + " - " + resolve.album + " - " + resolve.title );
 // var response2 = resolver.resolve( 1235, resolve.artist, resolve.album, resolve.title );
 // //Tomahawk.dumpResult( response2 );
-
 // Tomahawk.log("test");
 // n = 0;
 // var items = resolver.getArtists( n ).results;
@@ -324,4 +345,3 @@ var resolver = Tomahawk.resolver.instance;
 // }
 //
 // phantom.exit();
-
