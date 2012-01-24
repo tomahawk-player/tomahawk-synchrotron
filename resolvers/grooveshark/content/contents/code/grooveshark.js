@@ -128,7 +128,7 @@ var GroovesharkResolver = Tomahawk.extend(TomahawkResolver, {
             Tomahawk.log("Grooveshark Resolver not properly configured!");
             return;
         }
-        Tomahawk.log("Doing Grooveshark resolver init, got credentials: " + userConfig.username + ":" + userConfig.password );
+        Tomahawk.log("Doing Grooveshark resolver init, got credentials: " + userConfig.username );
         this.username = userConfig.username;
         this.password = userConfig.password;
 
