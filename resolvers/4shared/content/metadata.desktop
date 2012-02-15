@@ -1,5 +1,5 @@
 [Desktop Entry]
-Name=4Shared Resolver
+Name=4Shared
 Comment=Looks for tracks to play from www.4shared.com
 
 Type=Service
@@ -10,6 +10,6 @@ X-KDE-PluginInfo-Name=4shared
 X-KDE-PluginInfo-Category=Resolver
 X-KDE-PluginInfo-Author=lasconic
 X-KDE-PluginInfo-Email=lasconic@gmail.com
-X-KDE-PluginInfo-Version=0.1.1
+X-KDE-PluginInfo-Version=0.1.2
 X-KDE-PluginInfo-Website=http://gettomahawk.com
 
