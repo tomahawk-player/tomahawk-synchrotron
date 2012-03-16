@@ -1,0 +1,9 @@
+.directory
+*.a
+*.o
+._*
+*.user
+Makefile*
+moc_*
+*~
+.DS_Store
