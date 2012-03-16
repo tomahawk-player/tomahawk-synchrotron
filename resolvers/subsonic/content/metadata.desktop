@@ -1,0 +1,14 @@
+[Desktop Entry]
+Name=Subsonic
+Comment=Searches your Subsonic server for music to play
+
+Type=Service
+X-KDE-ServiceTypes=Tomahawk/Resolver
+X-Synchrotron-MainScript=contents/code/subsonic.js
+
+X-KDE-PluginInfo-Name=subsonic
+X-KDE-PluginInfo-Category=Resolver
+X-KDE-PluginInfo-Author=Joe McAtee
+X-KDE-PluginInfo-Email=
+X-KDE-PluginInfo-Version=0.1
+X-KDE-PluginInfo-Website=http://gettomahawk.com
