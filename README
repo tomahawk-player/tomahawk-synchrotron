@@ -1,3 +1,21 @@
 This is the repository for the tomahawk resolvers that are automatically exposed in Tomahawk through KDE's Synchrotron.
 
 Resolvers are manually pushed / upgraded here, and Tomahawk users will be able to install them directly from Tomahawk.
+
+[Binary Resolvers]
+Binary resolvers are supported in the binaryresolvers provider. The layout of the directory is as such:
+
+binaryresolvers/
+    [name]/
+        osx/metadata.desktop
+        osx/resolver.zip
+        
+        windows/metadata.desktop
+        windows/resolver.zip
+        
+    [name]/
+        osx/metadata.desktop
+        osx/resolver.zip
+        
+        windows/metadata.desktop
+        windows/resolver.zip
