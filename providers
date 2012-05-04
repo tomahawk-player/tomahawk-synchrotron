@@ -2,7 +2,3 @@
 compression=zip
 packageSuffix=.tomahawkresolver.zip
 metadata=content/metadata.desktop
-[binaryresolvers]
-compression=zip
-packageSuffix=.bintomahawkresolver.zip
-metadata=content/metadata.desktop
