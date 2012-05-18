@@ -1,0 +1,18 @@
+[Desktop Entry]
+Name=Spotify
+Comment=Play your music from and sync your playlists with Spotify
+
+Type=Service
+X-KDE-ServiceTypes=Tomahawk/BinaryResolver
+X-Synchrotron-Signature=MC0CFDqKjzutQaDx5FgQHY6wF0X7E4tQAhUAxlM8caYVuutFTiQrogp1607K22A=
+
+X-Synchrotron-ContentUrl=spotify.zip
+X-Synchrotron-Type=win
+X-Synchrotron-MainScript=spotify_tomahawkresolver.exe
+
+X-KDE-PluginInfo-Name=spotify-win
+X-KDE-PluginInfo-Category=BinaryResolver
+X-KDE-PluginInfo-Author=Hugo and Leo
+X-KDE-PluginInfo-Email=lfranchi@kde.org
+X-KDE-PluginInfo-Version=0.5.0
+X-KDE-PluginInfo-Website=http://gettomahawk.com
