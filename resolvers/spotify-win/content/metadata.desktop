@@ -4,7 +4,7 @@ Comment=Play your music from and sync your playlists with Spotify
 
 Type=Service
 X-KDE-ServiceTypes=Tomahawk/BinaryResolver
-X-Synchrotron-Signature=MC4CFQDwcotjYHZfBZ5Ep1UcpDSgNZDI3AIVAKM+9f0cxyHHlpj+JcT3+t0F/ktN
+X-Synchrotron-Signature=MC4CFQCpgPDO6KyeZma/8AbxBcw0mXCFkgIVAJDotbLy9NpDM8S/OXnrdC5gYAMe
 
 X-Synchrotron-ContentUrl=spotify-win.zip
 X-Synchrotron-Type=win
