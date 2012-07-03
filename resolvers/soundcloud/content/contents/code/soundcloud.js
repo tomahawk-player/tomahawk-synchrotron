@@ -1,3 +1,6 @@
+/*
+ * (c) 2012 thierry göckel <thierry@strayrayday.lu>
+ */
 var SoundcloudResolver = Tomahawk.extend(TomahawkResolver, {
 	
 	getConfigUi: function () {
@@ -25,7 +28,7 @@ var SoundcloudResolver = Tomahawk.extend(TomahawkResolver, {
 
 	newConfigSaved: function () {
 		var userConfig = this.getUserConfig();
-		if((userConfig.includeCovers != this.includeCovers) || (userConfig.includeRemixes != this.includeRemixes) || (userConfig.includeLive != this.includeLive)) {
+		if ((userConfig.includeCovers != this.includeCovers) || (userConfig.includeRemixes != this.includeRemixes) || (userConfig.includeLive != this.includeLive)) {
 			this.includeCovers = userConfig.includeCovers;
 			this.includeRemixes = userConfig.includeRemixes;
 			this.includeLive = userConfig.includeLive;
@@ -38,9 +41,9 @@ var SoundcloudResolver = Tomahawk.extend(TomahawkResolver, {
 		timeout: 15
 	},
 	
-	init: function() {
+	init: function () {
 		String.prototype.capitalize = function(){
-		return this.replace( /(^|\s)([a-z])/g , function(m,p1,p2){ return p1+p2.toUpperCase(); } );
+			return this.replace( /(^|\s)([a-z])/g , function(m,p1,p2){ return p1+p2.toUpperCase(); } );
 		};
 	},	
 
@@ -59,7 +62,7 @@ var SoundcloudResolver = Tomahawk.extend(TomahawkResolver, {
 		}
 	},
 
-	resolve: function(qid, artist, album, title)
+	resolve: function (qid, artist, album, title)
 	{
 		if (artist !== "") {
 			query = encodeURIComponent(artist) + "+";
@@ -73,7 +76,7 @@ var SoundcloudResolver = Tomahawk.extend(TomahawkResolver, {
 			results: [],
 			qid: qid
 		};
-		Tomahawk.asyncRequest(apiQuery, function(xhr) {
+		Tomahawk.asyncRequest(apiQuery, function (xhr) {
 			var resp = JSON.parse(xhr.responseText);
 			if (resp.length !== 0){
 				var results = [];
@@ -123,15 +126,15 @@ var SoundcloudResolver = Tomahawk.extend(TomahawkResolver, {
 		});
 	},
 	
-	search: function( qid, searchString )
+	search: function (qid, searchString)
 	{
-		var apiQuery = "http://api.soundcloud.com/tracks.json?consumer_key=TiNg2DRYhBnp01DA3zNag&filter=streamable&q=" +  encodeURIComponent(searchString.replace('"', '').replace("'", ""));
+		var apiQuery = "http://api.soundcloud.com/tracks.json?consumer_key=TiNg2DRYhBnp01DA3zNag&filter=streamable&q=" + encodeURIComponent(searchString.replace('"', '').replace("'", ""));
 		var that = this;
 		var empty = {
 			results: [],
 			qid: qid
 		};
-		Tomahawk.asyncRequest(apiQuery, function(xhr) {
+		Tomahawk.asyncRequest(apiQuery, function (xhr) {
 			var resp = JSON.parse(xhr.responseText);
 			if (resp.length !== 0){
 				var results = [];
@@ -145,36 +148,36 @@ var SoundcloudResolver = Tomahawk.extend(TomahawkResolver, {
 
 					if (that.getTrack(resp[i].title, "")){
 						var track = resp[i].title;
-						if(track.indexOf(" - ") !== -1){
+						if (track.indexOf(" - ") !== -1 && track.slice(track.indexOf(" - ") + 3).trim() !== ""){
 							result.track = track.slice(track.indexOf(" - ") + 3).trim();
 							result.artist = track.slice(0, track.indexOf(" - ")).trim();
 						}
-						else if(track.indexOf(" -") !== -1){
+						else if (track.indexOf(" -") !== -1 && track.slice(track.indexOf(" -") + 2).trim() !== ""){
 							result.track = track.slice(track.indexOf(" -") + 2).trim();
 							result.artist = track.slice(0, track.indexOf(" -")).trim();
 						}
-						else if(track.indexOf(": ") !== -1){
+						else if (track.indexOf(": ") !== -1 && track.slice(track.indexOf(": ") + 2).trim() !== ""){
 							result.track = track.slice(track.indexOf(": ") + 2).trim();
 							result.artist = track.slice(0, track.indexOf(": ")).trim();
 						}
-						else if(track.indexOf("-") !== -1){
+						else if (track.indexOf("-") !== -1 && track.slice(track.indexOf("-") + 1).trim() !== ""){
 							result.track = track.slice(track.indexOf("-") + 1).trim();
 							result.artist = track.slice(0, track.indexOf("-")).trim();
 						}
-						else if(track.indexOf(":") !== -1){
+						else if (track.indexOf(":") !== -1 && track.slice(track.indexOf(":") + 1).trim() !== ""){
 							result.track = track.slice(track.indexOf(":") + 1).trim();
 							result.artist = track.slice(0, track.indexOf(":")).trim();
 						}
-						else if(track.indexOf("\u2014") !== -1){
+						else if (track.indexOf("\u2014") !== -1 && track.slice(track.indexOf("\u2014") + 2).trim() !== ""){
 							result.track = track.slice(track.indexOf("\u2014") + 2).trim();
 							result.artist = track.slice(0, track.indexOf("\u2014")).trim();
 						}
-						else if( resp[i].title !== "" && resp[i].user.username !== ""){
+						else if (resp[i].title !== "" && resp[i].user.username !== ""){
 							// Last resort, the artist is the username
 							result.track = resp[i].title;
 							result.artist = resp[i].user.username;
-							
-						}else{
+						}
+						else {
 							stop = stop - 1;
 							continue;
 						}
@@ -192,14 +195,14 @@ var SoundcloudResolver = Tomahawk.extend(TomahawkResolver, {
 					result.year = resp[i].release_year;
 					result.url = resp[i].stream_url + ".json?client_id=TiNg2DRYhBnp01DA3zNag";
 					
-					(function(i, result) {
+					(function (i, result) {
 						var artist = encodeURIComponent(result.artist.capitalize());
 						var url = "http://developer.echonest.com/api/v4/artist/extract?api_key=JRIHWEP6GPOER2QQ6&format=json&results=1&sort=hotttnesss-desc&text=" + artist;
 						var xhr = new XMLHttpRequest();
 						xhr.open('GET', url, true);
 						xhr.onreadystatechange = function() {
 								if (xhr.readyState === 4){
-									if(xhr.status === 200) {
+									if (xhr.status === 200) {
 										var response = JSON.parse(xhr.responseText).response;
 										if (response && response.artists && response.artists.length > 0) {
 											artist = response.artists[0].name;
@@ -209,7 +212,6 @@ var SoundcloudResolver = Tomahawk.extend(TomahawkResolver, {
 											stop = stop - 1;
 										}
 										else {
-											
 											stop = stop - 1;
 										}
 										if (stop === 0) {
@@ -235,6 +237,9 @@ var SoundcloudResolver = Tomahawk.extend(TomahawkResolver, {
 						};
 						xhr.send(null);
 					})(i, result);	
+				}
+				if (stop === 0){
+					Tomahawk.addTrackResults(empty);
 				}
 			}
 			else {
