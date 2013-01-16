@@ -1,19 +1,19 @@
 [Desktop Entry]
 Name=Spotify
-Comment=Play your music from and sync your playlists with Spotify
+Comment=Play your music from and sync your playlists with Spotify. Requires a Premium account.
 
 Type=Service
 X-KDE-ServiceTypes=Tomahawk/BinaryResolver
-X-Synchrotron-Signature=MCwCFHFgArArk1D522UQ7DX1rYMkJOvhAhQYHzhbQZd2FfAiCyHJbfAcw/LeGQ==
+X-Synchrotron-Signature=MC0CFAnRtSYIEvsEUXc6ApKF8zeRWA2KAhUAkUFjC18g7PMbey23Yd/McBO22QM=
 
 X-Synchrotron-ContentUrl=spotify-linux-x64.zip
 X-Synchrotron-Type=linux-x64
 X-Synchrotron-MainScript=spotify_tomahawkresolver
-X-Synchrotron-Requires-Tomahawk-Version=0.5.5
+X-Synchrotron-Requires-Tomahawk-Version=0.6.0
 
 X-KDE-PluginInfo-Name=spotify-linux-x64
 X-KDE-PluginInfo-Category=BinaryResolver
 X-KDE-PluginInfo-Author=Hugo and Leo
 X-KDE-PluginInfo-Email=lfranchi@kde.org
-X-KDE-PluginInfo-Version=0.6.0
+X-KDE-PluginInfo-Version=0.6.1
 X-KDE-PluginInfo-Website=http://gettomahawk.com
