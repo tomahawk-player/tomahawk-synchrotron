@@ -1,3 +1,13 @@
+############################################################################
+## Desktop file generated from JSON file 'metadata.json' 
+##
+## Created: 2013-04-06 11:37:30 UTC
+##      by: json2desktop.rb, https://github.com/tomahawk-player
+##
+##                         #### WARNING! ####
+##              All changes made to this file will be lost!
+############################################################################
+
 [Desktop Entry]
 Name=Subsonic
 Comment=Searches your Subsonic server for music to play
@@ -5,10 +15,11 @@ Comment=Searches your Subsonic server for music to play
 Type=Service
 X-KDE-ServiceTypes=Tomahawk/Resolver
 X-Synchrotron-MainScript=contents/code/subsonic.js
+X-Synchrotron-Requires-Tomahawk-Version=0.6.99
 
 X-KDE-PluginInfo-Name=subsonic
 X-KDE-PluginInfo-Category=Resolver
-X-KDE-PluginInfo-Author=mack_t
-X-KDE-PluginInfo-Email=
-X-KDE-PluginInfo-Version=0.4
+X-KDE-PluginInfo-Author=mack_t and Teo
+X-KDE-PluginInfo-Email=teo@kde.org
+X-KDE-PluginInfo-Version=0.5
 X-KDE-PluginInfo-Website=http://gettomahawk.com
