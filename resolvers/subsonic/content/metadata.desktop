@@ -1,7 +1,7 @@
 ############################################################################
 ## Desktop file generated from JSON file 'metadata.json' 
 ##
-## Created: 2013-04-06 11:37:30 UTC
+## Created: 2013-04-06 12:54:18 UTC
 ##      by: json2desktop.rb, https://github.com/tomahawk-player
 ##
 ##                         #### WARNING! ####
@@ -21,5 +21,5 @@ X-KDE-PluginInfo-Name=subsonic
 X-KDE-PluginInfo-Category=Resolver
 X-KDE-PluginInfo-Author=mack_t and Teo
 X-KDE-PluginInfo-Email=teo@kde.org
-X-KDE-PluginInfo-Version=0.5
+X-KDE-PluginInfo-Version=0.5.1
 X-KDE-PluginInfo-Website=http://gettomahawk.com
