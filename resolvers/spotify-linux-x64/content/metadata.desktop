@@ -4,7 +4,7 @@ Comment=Play your music from and sync your playlists with Spotify. Requires a Pr
 
 Type=Service
 X-KDE-ServiceTypes=Tomahawk/BinaryResolver
-X-Synchrotron-Signature=MC0CFQCEiUjQBwzupZ34N+H5IGU2uaxROAIUIxGC8S9nU2CMfdlmt6iZ2wr6DPc=
+X-Synchrotron-Signature=MC0CFQDPHXvSqhADxCG/zJ8wUNUcQixM7wIUfV919l+6fsv2odo1t3N/VB/DJxo=
 
 X-Synchrotron-ContentUrl=spotify-linux-x64.zip
 X-Synchrotron-Type=linux-x64
@@ -15,5 +15,5 @@ X-KDE-PluginInfo-Name=spotify-linux-x64
 X-KDE-PluginInfo-Category=BinaryResolver
 X-KDE-PluginInfo-Author=Hugo and Leo
 X-KDE-PluginInfo-Email=lfranchi@kde.org
-X-KDE-PluginInfo-Version=0.7.2
+X-KDE-PluginInfo-Version=0.7.3
 X-KDE-PluginInfo-Website=http://gettomahawk.com
