@@ -1,0 +1,24 @@
+############################################################################
+## Desktop file generated from JSON file 'metadata.json' 
+##
+## Created: 2013-05-19 15:02:11 UTC
+##      by: json2desktop.rb, https://github.com/tomahawk-player
+##
+##                         #### WARNING! ####
+##              All changes made to this file will be lost!
+############################################################################
+
+[Desktop Entry]
+Name=Beets
+Comment=Connects to a beets server and resolves tracks
+
+Type=Service
+X-KDE-ServiceTypes=Tomahawk/Resolver
+X-Synchrotron-MainScript=contents/code/beets-resolver.js
+
+X-KDE-PluginInfo-Name=beets
+X-KDE-PluginInfo-Category=Resolver
+X-KDE-PluginInfo-Author=Adrian and Uwe
+X-KDE-PluginInfo-Email=uwelk@xhochy.com
+X-KDE-PluginInfo-Version=0.4
+X-KDE-PluginInfo-Website=http://gettomahawk.com
