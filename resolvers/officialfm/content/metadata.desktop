@@ -1,3 +1,13 @@
+############################################################################
+## Desktop file generated from JSON file 'metadata.json' 
+##
+## Created: 2013-05-26 16:35:16 UTC
+##      by: json2desktop.rb, https://github.com/tomahawk-player
+##
+##                         #### WARNING! ####
+##              All changes made to this file will be lost!
+############################################################################
+
 [Desktop Entry]
 Name=Official.fm
 Comment=Searches Official.fm for playable tracks
@@ -8,8 +18,7 @@ X-Synchrotron-MainScript=contents/code/officialfm.js
 
 X-KDE-PluginInfo-Name=officialfm
 X-KDE-PluginInfo-Category=Resolver
-X-KDE-PluginInfo-Author=lfranchi and lasconic
-X-KDE-PluginInfo-Email=lfranchi@tomahawk-player.org
-X-KDE-PluginInfo-Version=1.0.4
+X-KDE-PluginInfo-Author=Leo and lasconic
+X-KDE-PluginInfo-Email=lasconic@gmail.com
+X-KDE-PluginInfo-Version=1.0.6
 X-KDE-PluginInfo-Website=http://gettomahawk.com
-
