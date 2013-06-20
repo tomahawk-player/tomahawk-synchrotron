@@ -1,6 +1,16 @@
+############################################################################
+## Desktop file generated from JSON file 'metadata.json' 
+##
+## Created: 2013-06-20 13:24:25 UTC
+##      by: json2desktop.rb, https://github.com/tomahawk-player
+##
+##                         #### WARNING! ####
+##              All changes made to this file will be lost!
+############################################################################
+
 [Desktop Entry]
 Name=SoundCloud
-Comment=Resolves to playable tracks on SoundCloud, including live, cover and remixed versions if specified.
+Comment=Resolves to playable tracks on SoundCloud, including live, cover and remixed versions if specified
 
 Type=Service
 X-KDE-ServiceTypes=Tomahawk/Resolver
@@ -10,6 +20,5 @@ X-KDE-PluginInfo-Name=soundcloud
 X-KDE-PluginInfo-Category=Resolver
 X-KDE-PluginInfo-Author=Thierry Göckel
 X-KDE-PluginInfo-Email=thierry@strayrayday.lu
-X-KDE-PluginInfo-Version=0.9.0
+X-KDE-PluginInfo-Version=0.9.2
 X-KDE-PluginInfo-Website=http://gettomahawk.com
-
