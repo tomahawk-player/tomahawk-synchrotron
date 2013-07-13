@@ -1,6 +1,16 @@
+############################################################################
+## Desktop file generated from JSON file 'metadata.json' 
+##
+## Created: 2013-07-13 11:42:21 UTC
+##      by: json2desktop.rb, https://github.com/tomahawk-player
+##
+##                         #### WARNING! ####
+##              All changes made to this file will be lost!
+############################################################################
+
 [Desktop Entry]
-Name=Ex.fm
-Comment=Searches ex.fm for playable tracks
+Name=ex.fm
+Comment=Resolves tracks via the ex.fm API
 
 Type=Service
 X-KDE-ServiceTypes=Tomahawk/Resolver
@@ -8,8 +18,7 @@ X-Synchrotron-MainScript=contents/code/exfm.js
 
 X-KDE-PluginInfo-Name=exfm
 X-KDE-PluginInfo-Category=Resolver
-X-KDE-PluginInfo-Author=lasconic
-X-KDE-PluginInfo-Email=lasconic@gmail.com
-X-KDE-PluginInfo-Version=0.2.1
+X-KDE-PluginInfo-Author=Nicolas and Uwe
+X-KDE-PluginInfo-Email=uwelk@xhochy.com
+X-KDE-PluginInfo-Version=0.3.2
 X-KDE-PluginInfo-Website=http://gettomahawk.com
-
