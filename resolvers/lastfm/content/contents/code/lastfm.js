@@ -1,3 +1,21 @@
+/* === This file is part of Tomahawk Player - <http://tomahawk-player.org> ===
+ *
+ *   Copyright 2011-2012, Thierry Göckel <thierry@strayrayday.lu>
+ *
+ *   Tomahawk is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *   Tomahawk is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with Tomahawk. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 var LastfmResolver = Tomahawk.extend(TomahawkResolver, {
     settings: {
         name: 'Last.fm',
@@ -14,11 +32,14 @@ var LastfmResolver = Tomahawk.extend(TomahawkResolver, {
             if (responseString.track.album != undefined) {
                 result.album = responseString.track.album.title;
             } else {
-                result.album = "";
+		result.album = "";
             }
             if (responseString.track.year != undefined) {
                 result.year = responseString.track.year;
             }
+            if (responseString.track.url != undefined) {
+		result.linkUrl = responseString.track.url;
+	    }
             result.source = this.settings.name;
             result.url = responseString.track.freedownload;
             result.mimetype = "audio/mpeg";
