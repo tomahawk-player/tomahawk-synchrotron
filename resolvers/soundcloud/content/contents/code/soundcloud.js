@@ -65,25 +65,33 @@ var SoundcloudResolver = Tomahawk.extend(TomahawkResolver, {
 		}
 	},
 
-	init: function() {
+    /**
+     * Initial the soundcloud resolver.
+     *
+     * @param callback function(err) Callback that notifies when the resolver was initialised.
+     */
+	init: function (callback) {
 		// Set userConfig here
 		var userConfig = this.getUserConfig();
-		if ( userConfig !== undefined ){
-			this.includeCovers = userConfig.includeCovers;
-			this.includeRemixes = userConfig.includeRemixes;
-			this.includeLive = userConfig.includeLive;
-		}
-		else {
-			this.includeCovers = false;
-			this.includeRemixes = false;
-			this.includeLive = false;
-		}
+        if ( userConfig !== undefined ) {
+            this.includeCovers = userConfig.includeCovers;
+            this.includeRemixes = userConfig.includeRemixes;
+            this.includeLive = userConfig.includeLive;
+        } else {
+            this.includeCovers = false;
+            this.includeRemixes = false;
+            this.includeLive = false;
+        }
 
 
 		String.prototype.capitalize = function(){
 			return this.replace( /(^|\s)([a-z])/g , function(m,p1,p2){ return p1+p2.toUpperCase(); } );
 		};
         Tomahawk.reportCapabilities(TomahawkResolverCapability.UrlLookup);
+
+        if (callback) {
+            callback(null);
+        }
 	},
 
 	getTrack: function (trackTitle, origTitle) {
@@ -103,13 +111,14 @@ var SoundcloudResolver = Tomahawk.extend(TomahawkResolver, {
 
 	resolve: function (qid, artist, album, title)
 	{
+		var query;
 		if (artist !== "") {
 			query = encodeURIComponent(artist) + "+";
 		}
 		if (title !== "") {
 			query += encodeURIComponent(title);
 		}
-		var apiQuery = "http://api.soundcloud.com/tracks.json?consumer_key=TiNg2DRYhBnp01DA3zNag&filter=streamable&q=" + query;
+		var apiQuery = "https://api.soundcloud.com/tracks.json?consumer_key=TiNg2DRYhBnp01DA3zNag&filter=streamable&q=" + query;
 		var that = this;
 		var empty = {
 			results: [],
@@ -118,49 +127,60 @@ var SoundcloudResolver = Tomahawk.extend(TomahawkResolver, {
 		Tomahawk.asyncRequest(apiQuery, function (xhr) {
 			var resp = JSON.parse(xhr.responseText);
 			if (resp.length !== 0){
-				var results = [];
-				for (i = 0; i < resp.length; i++) {
-					// Need some more validation here
-					// This doesnt help it seems, or it just throws the error anyhow, and skips?
-					if (resp[i] === undefined){
+                var results = [];
+                for (i = 0; i < resp.length; i++) {
+                    // Need some more validation here
+                    // This doesnt help it seems, or it just throws the error anyhow, and skips?
+                    if (typeof(resp[i]) == 'undefined' || resp[i] === null) {
+                        continue;
+                    }
+
+                    // Check for streamable tracks only
+					if (!resp[i].streamable) {
 						continue;
 					}
 
-					if (!resp[i].streamable){ // Check for streamable tracks only
-						continue;
-					}
-
-					// Check whether the artist and title (if set) are in the returned title, discard otherwise
-					// But also, the artist could be the username
-					if (resp[i].title !== undefined && (resp[i].title.toLowerCase().indexOf(artist.toLowerCase()) === -1 || resp[i].title.toLowerCase().indexOf(title.toLowerCase()) === -1)) {
-						continue;
-					}
-					var result = new Object();
-					result.artist = artist;
-					if (that.getTrack(resp[i].title, title)){
-						result.track = title;
-					}
-					else {
-						continue;
-					}
-
-					result.source = that.settings.name;
-					result.mimetype = "audio/mpeg";
-					result.bitrate = 128;
-					result.duration = resp[i].duration / 1000;
-					result.score = 0.85;
-					result.year = resp[i].release_year;
-					result.url = resp[i].stream_url + ".json?client_id=TiNg2DRYhBnp01DA3zNag";
-					if (resp[i].permalink_url !== undefined) result.linkUrl = resp[i].permalink_url;
-					results.push(result);
-				}
-				var return1 = {
-					qid: qid,
-					results: [results[0]]
-				};
-				Tomahawk.addTrackResults(return1);
+                    if (typeof(resp[i].title) != 'undefined' && resp[i].title !== null) {
+                        // Check whether the artist and title (if set) are in the returned title, discard otherwise
+                        // But also, the artist could be the username
+                        if (resp[i].title.toLowerCase().indexOf(artist.toLowerCase()) === -1){
+				continue;
 			}
-			else {
+                        if (resp[i].title.toLowerCase().indexOf(title.toLowerCase()) === -1){
+				continue;
+			}
+
+                        var result = {
+                            artist: artist,
+                            bitrate: 128,
+                            mimetype: "audio/mpeg",
+                            score: 0.85,
+                            source: that.settings.name
+                        };
+                        if (that.getTrack(resp[i].title, title)) {
+                            result.track = title;
+                        } else {
+                            continue;
+                        }
+
+                        result.duration = resp[i].duration / 1000;
+                        result.year = resp[i].release_year;
+                        result.url = resp[i].stream_url + ".json?client_id=TiNg2DRYhBnp01DA3zNag";
+                        if (typeof(resp[i].permalink_url) != 'undefined' && resp[i].permalink_url !== null) {
+                            result.linkUrl = resp[i].permalink_url;
+                        }
+                        results.push(result);
+                    }
+				}
+                if (results.length > 0) {
+                    Tomahawk.addTrackResults({
+                        qid: qid,
+                        results: [results[0]]
+                    });
+                } else {
+                    Tomahawk.addTrackResults(empty);
+                }
+			} else {
 				Tomahawk.addTrackResults(empty);
 			}
 		});
@@ -168,7 +188,7 @@ var SoundcloudResolver = Tomahawk.extend(TomahawkResolver, {
 
 	search: function (qid, searchString)
 	{
-		var apiQuery = "http://api.soundcloud.com/tracks.json?consumer_key=TiNg2DRYhBnp01DA3zNag&filter=streamable&q=" + encodeURIComponent(searchString.replace('"', '').replace("'", ""));
+		var apiQuery = "https://api.soundcloud.com/tracks.json?consumer_key=TiNg2DRYhBnp01DA3zNag&filter=streamable&q=" + encodeURIComponent(searchString.replace('"', '').replace("'", ""));
 		var that = this;
 		var empty = {
 			results: [],
@@ -184,7 +204,7 @@ var SoundcloudResolver = Tomahawk.extend(TomahawkResolver, {
 						stop = stop - 1;
 						continue;
 					}
-					var result = new Object();
+					var result = {};
 
 					if (that.getTrack(resp[i].title, "")){
 						var track = resp[i].title;
@@ -234,11 +254,13 @@ var SoundcloudResolver = Tomahawk.extend(TomahawkResolver, {
 					result.score = 0.85;
 					result.year = resp[i].release_year;
 					result.url = resp[i].stream_url + ".json?client_id=TiNg2DRYhBnp01DA3zNag";
-					if (resp[i].permalink_url !== undefined) result.linkUrl = resp[i].permalink_url;
+					if (resp[i].permalink_url !== undefined){
+						result.linkUrl = resp[i].permalink_url;
+					}
 
 					(function (i, result) {
 						var artist = encodeURIComponent(result.artist.capitalize());
-						var url = "http://developer.echonest.com/api/v4/artist/extract?api_key=JRIHWEP6GPOER2QQ6&format=json&results=1&sort=hotttnesss-desc&text=" + artist;
+						var url = "https://developer.echonest.com/api/v4/artist/extract?api_key=JRIHWEP6GPOER2QQ6&format=json&results=1&sort=hotttnesss-desc&text=" + artist;
                         Tomahawk.asyncRequest(url, function (xhr) {
                             var response = JSON.parse(xhr.responseText).response;
                             if (response && response.artists && response.artists.length > 0) {
@@ -289,7 +311,7 @@ var SoundcloudResolver = Tomahawk.extend(TomahawkResolver, {
         // case TomahawkUrlType.Track:
         // case TomahawkUrlType.Any:
         default:
-            return /https?:\/\/(www\.)?soundcloud.com\//.test(url);
+            return (/https?:\/\/(www\.)?soundcloud.com\//).test(url);
         }
     },
 
@@ -300,69 +322,69 @@ var SoundcloudResolver = Tomahawk.extend(TomahawkResolver, {
             artist: track.user.username
         };
 
-        if (!(track.stream_url == null || typeof track.stream_url === "undefined")) {
+        if (!(track.stream_url === null || typeof track.stream_url === "undefined")) {
             result.hint = track.stream_url + "?client_id=" + this.clientId;
         }
         return result;
     },
 
-    lookupUrl: function (url) {
+	lookupUrl: function (url) {
 		var query = "https://api.soundcloud.com/resolve.json?client_id=" + this.clientId + "&url=" + encodeURIComponent(url.replace(/\/likes$/, ''));
 		var that = this;
 		Tomahawk.asyncRequest(query, function (xhr) {
 			var res = JSON.parse(xhr.responseText);
-            if (res.kind == "playlist") {
-                var result = {
-                    type: "playlist",
-                    title: res.title,
-                    guid: 'soundcloud-playlist-' + res.id.toString(),
-                    info: res.description,
-                    creator: res.user.username,
-                    url: res.permalink_url,
-                    tracks: []
-                };
-                res.tracks.forEach(function (item) {
-                    result.tracks.push(that.track2Result(item));
-                });
-                Tomahawk.addUrlResult(url, result);
-            } else if (res.kind == "track") {
-                Tomahawk.addUrlResult(url, that.track2Result(res));
-            } else if (res.kind == "user") {
-                var url2 = res.uri;
-                var prefix = 'soundcloud-';
-                var title = res.full_name + "'s ";
-                if (url.indexOf("/likes") === -1) {
-                    url2 += "/tracks.json?client_id=" + that.clientId;
-                    prefix += 'user-';
-                    title += "Tracks";
-                } else {
-                    url2 += "/favorites.json?client_id=" + that.clientId;
-                    prefix += 'favortites-';
-                    title += "Favorites";
-                }
-                Tomahawk.asyncRequest(url2, function (xhr2) {
-                    var res2 = JSON.parse(xhr2.responseText);
-                    var result = {
-                        type: "playlist",
-                        title: title,
-                        guid: prefix + res.id.toString(),
-                        info: title,
-                        creator: res.username,
-                        url: res2.permalink_url,
-                        tracks: []
-                    };
-                    res2.forEach(function (item) {
-                        result.tracks.push(that.track2Result(item));
-                    });
-                    Tomahawk.addUrlResult(url, result);
-                });
-                return;
-            } else {
-                Tomahawk.log("Could not parse SoundCloud URL: " + url);
-                Tomahawk.addUrlResult(url, {})
-            }
-        });
-    }
+			if (res.kind == "playlist") {
+				var result = {
+					type: "playlist",
+					title: res.title,
+					guid: 'soundcloud-playlist-' + res.id.toString(),
+					info: res.description,
+					creator: res.user.username,
+					url: res.permalink_url,
+					tracks: []
+				};
+				res.tracks.forEach(function (item) {
+					result.tracks.push(that.track2Result(item));
+				});
+				Tomahawk.addUrlResult(url, result);
+			} else if (res.kind == "track") {
+				Tomahawk.addUrlResult(url, that.track2Result(res));
+			} else if (res.kind == "user") {
+				var url2 = res.uri;
+				var prefix = 'soundcloud-';
+				var title = res.full_name + "'s ";
+				if (url.indexOf("/likes") === -1) {
+					url2 += "/tracks.json?client_id=" + that.clientId;
+					prefix += 'user-';
+					title += "Tracks";
+				} else {
+					url2 += "/favorites.json?client_id=" + that.clientId;
+					prefix += 'favortites-';
+					title += "Favorites";
+				}
+				Tomahawk.asyncRequest(url2, function (xhr2) {
+					var res2 = JSON.parse(xhr2.responseText);
+					var result = {
+						type: "playlist",
+						title: title,
+						guid: prefix + res.id.toString(),
+						info: title,
+						creator: res.username,
+						url: res2.permalink_url,
+						tracks: []
+					};
+					res2.forEach(function (item) {
+						result.tracks.push(that.track2Result(item));
+					});
+					Tomahawk.addUrlResult(url, result);
+				});
+				return;
+			} else {
+				Tomahawk.log("Could not parse SoundCloud URL: " + url);
+				Tomahawk.addUrlResult(url, {});
+			}
+		});
+	}
 });
 
 Tomahawk.resolver.instance = SoundcloudResolver;
