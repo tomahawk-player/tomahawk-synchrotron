@@ -1,0 +1,24 @@
+############################################################################
+## Desktop file generated from JSON file 'metadata.json' 
+##
+## Created: 2014-11-02 19:49:10 UTC
+##      by: json2desktop.rb, https://github.com/tomahawk-player
+##
+##                         #### WARNING! ####
+##              All changes made to this file will be lost!
+############################################################################
+
+[Desktop Entry]
+Name=Beats Music
+Comment=(0.8+) Stream music from Beats Music.
+
+Type=Service
+X-KDE-ServiceTypes=Tomahawk/Resolver
+X-Synchrotron-MainScript=contents/code/beatsmusic.js
+
+X-KDE-PluginInfo-Name=beatsmusic
+X-KDE-PluginInfo-Category=Resolver
+X-KDE-PluginInfo-Author=Uwe L. Korn
+X-KDE-PluginInfo-Email=uwelk@xhochy.com
+X-KDE-PluginInfo-Version=0.1.2
+X-KDE-PluginInfo-Website=http://gettomahawk.com
