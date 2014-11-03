@@ -1,6 +1,16 @@
+############################################################################
+## Desktop file generated from JSON file 'metadata.json' 
+##
+## Created: 2014-11-03 09:07:26 UTC
+##      by: json2desktop.rb, https://github.com/tomahawk-player
+##
+##                         #### WARNING! ####
+##              All changes made to this file will be lost!
+############################################################################
+
 [Desktop Entry]
 Name=Grooveshark
-Comment=Searches Grooveshark for playable tracks. Requires premium account.
+Comment=Searches Grooveshark for playable tracks. Requires a VIP account.
 
 Type=Service
 X-KDE-ServiceTypes=Tomahawk/Resolver
@@ -8,8 +18,7 @@ X-Synchrotron-MainScript=contents/code/grooveshark.js
 
 X-KDE-PluginInfo-Name=grooveshark
 X-KDE-PluginInfo-Category=Resolver
-X-KDE-PluginInfo-Author=Leo Franchi
+X-KDE-PluginInfo-Author=Leo Franchi and Enno
 X-KDE-PluginInfo-Email=lfranchi@kde.org
-X-KDE-PluginInfo-Version=0.6.3
+X-KDE-PluginInfo-Version=0.8.0
 X-KDE-PluginInfo-Website=http://gettomahawk.com
-
