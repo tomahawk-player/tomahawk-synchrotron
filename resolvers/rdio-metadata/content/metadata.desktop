@@ -1,0 +1,24 @@
+############################################################################
+## Desktop file generated from JSON file 'metadata.json' 
+##
+## Created: 2014-11-05 19:14:23 UTC
+##      by: json2desktop.rb, https://github.com/tomahawk-player
+##
+##                         #### WARNING! ####
+##              All changes made to this file will be lost!
+############################################################################
+
+[Desktop Entry]
+Name=Rdio Metadata
+Comment=(0.8+) Supports loading and drag & drop of Rdio URLs.
+
+Type=Service
+X-KDE-ServiceTypes=Tomahawk/Resolver
+X-Synchrotron-MainScript=contents/code/rdio-metadata.js
+
+X-KDE-PluginInfo-Name=rdio-metadata
+X-KDE-PluginInfo-Category=Resolver
+X-KDE-PluginInfo-Author=Uwe L. Korn
+X-KDE-PluginInfo-Email=uwelk@xhochy.com
+X-KDE-PluginInfo-Version=0.1.1
+X-KDE-PluginInfo-Website=http://gettomahawk.com
