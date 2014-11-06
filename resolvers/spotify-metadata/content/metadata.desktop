@@ -1,0 +1,24 @@
+############################################################################
+## Desktop file generated from JSON file 'metadata.json' 
+##
+## Created: 2014-11-06 14:41:34 UTC
+##      by: json2desktop.rb, https://github.com/tomahawk-player
+##
+##                         #### WARNING! ####
+##              All changes made to this file will be lost!
+############################################################################
+
+[Desktop Entry]
+Name=Spotify Metadata
+Comment=Supports drag and drop of Spotify artist and track URLs (no Spotify account required)
+
+Type=Service
+X-KDE-ServiceTypes=Tomahawk/Resolver
+X-Synchrotron-MainScript=contents/code/spotify-metadata.js
+
+X-KDE-PluginInfo-Name=spotify-metadata
+X-KDE-PluginInfo-Category=Resolver
+X-KDE-PluginInfo-Author=Uwe L. Korn
+X-KDE-PluginInfo-Email=uwelk@xhochy.com
+X-KDE-PluginInfo-Version=0.1.2
+X-KDE-PluginInfo-Website=http://gettomahawk.com

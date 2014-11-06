@@ -1,0 +1,24 @@
+############################################################################
+## Desktop file generated from JSON file 'metadata.json' 
+##
+## Created: 2014-11-06 14:41:25 UTC
+##      by: json2desktop.rb, https://github.com/tomahawk-player
+##
+##                         #### WARNING! ####
+##              All changes made to this file will be lost!
+############################################################################
+
+[Desktop Entry]
+Name=toma.hk Metadata
+Comment=Supports loading and drag and drop of toma.hk URLs.
+
+Type=Service
+X-KDE-ServiceTypes=Tomahawk/Resolver
+X-Synchrotron-MainScript=contents/code/tomahk-metadata.js
+
+X-KDE-PluginInfo-Name=tomahk-metadata
+X-KDE-PluginInfo-Category=Resolver
+X-KDE-PluginInfo-Author=Uwe L. Korn
+X-KDE-PluginInfo-Email=uwelk@xhochy.com
+X-KDE-PluginInfo-Version=0.1.1
+X-KDE-PluginInfo-Website=http://gettomahawk.com
