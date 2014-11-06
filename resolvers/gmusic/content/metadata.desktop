@@ -1,7 +1,7 @@
 ############################################################################
 ## Desktop file generated from JSON file 'metadata.json' 
 ##
-## Created: 2014-11-04 20:02:04 UTC
+## Created: 2014-11-06 18:58:00 UTC
 ##      by: json2desktop.rb, https://github.com/tomahawk-player
 ##
 ##                         #### WARNING! ####
@@ -10,7 +10,7 @@
 
 [Desktop Entry]
 Name=Google Play Music
-Comment=(0.8+) Streams music from your Google Play Music locker and the entire Google Music catalog for subscribers.
+Comment=Streams music from your Google Play Music locker and the entire Google Music catalog for subscribers.
 
 Type=Service
 X-KDE-ServiceTypes=Tomahawk/Resolver
@@ -20,5 +20,5 @@ X-KDE-PluginInfo-Name=gmusic
 X-KDE-PluginInfo-Category=Resolver
 X-KDE-PluginInfo-Author=Sam Hanes, Lalit Maganti, Enno Gottschalk
 X-KDE-PluginInfo-Email=sam@maltera.com, lalitmaganti@gmail.com, mrmaffen@gmail.com
-X-KDE-PluginInfo-Version=0.4
+X-KDE-PluginInfo-Version=0.4.1
 X-KDE-PluginInfo-Website=http://gettomahawk.com
