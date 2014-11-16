@@ -1,7 +1,7 @@
 ############################################################################
 ## Desktop file generated from JSON file 'metadata.json' 
 ##
-## Created: 2014-11-06 18:58:00 UTC
+## Created: 2014-11-16 07:56:00 UTC
 ##      by: json2desktop.rb, https://github.com/tomahawk-player
 ##
 ##                         #### WARNING! ####
@@ -20,5 +20,5 @@ X-KDE-PluginInfo-Name=gmusic
 X-KDE-PluginInfo-Category=Resolver
 X-KDE-PluginInfo-Author=Sam Hanes, Lalit Maganti, Enno Gottschalk
 X-KDE-PluginInfo-Email=sam@maltera.com, lalitmaganti@gmail.com, mrmaffen@gmail.com
-X-KDE-PluginInfo-Version=0.4.1
+X-KDE-PluginInfo-Version=0.4.2
 X-KDE-PluginInfo-Website=http://gettomahawk.com
