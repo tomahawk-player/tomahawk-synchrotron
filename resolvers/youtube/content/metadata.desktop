@@ -1,0 +1,24 @@
+############################################################################
+## Desktop file generated from JSON file 'metadata.json' 
+##
+## Created: 2015-03-14 15:29:08 UTC
+##      by: json2desktop.rb, https://github.com/tomahawk-player
+##
+##                         #### WARNING! ####
+##              All changes made to this file will be lost!
+############################################################################
+
+[Desktop Entry]
+Name=YouTube
+Comment=Searches YouTube for audio content to play.
+
+Type=Service
+X-KDE-ServiceTypes=Tomahawk/Resolver
+X-Synchrotron-MainScript=contents/code/youtube.js
+
+X-KDE-PluginInfo-Name=youtube
+X-KDE-PluginInfo-Category=Resolver
+X-KDE-PluginInfo-Author=Hugo, Leo and Thierry
+X-KDE-PluginInfo-Email=lfranchi@kde.org
+X-KDE-PluginInfo-Version=0.9.13
+X-KDE-PluginInfo-Website=http://gettomahawk.com
