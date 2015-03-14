@@ -3,6 +3,7 @@
  *   Copyright 2012, mack-t <no_register_no_volatile@ymail.com>
  *   Copyright 2012, Peter Loron <peterl@standingwave.org>
  *   Copyright 2013, Teo Mrnjavac <teo@kde.org>
+ *   Copyright 2014, Enno Gottschalk <mrmaffen@googlemail.com>
  *
  *   Tomahawk is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -25,6 +26,10 @@ var SubsonicResolver = Tomahawk.extend(TomahawkResolver, {
         return {
             "widget": uiData,
             fields: [{
+                name: "subsonic_url",
+                widget: "subsonic_url_edit",
+                property: "text"
+            }, {
                 name: "user",
                 widget: "user_edit",
                 property: "text"
@@ -32,14 +37,6 @@ var SubsonicResolver = Tomahawk.extend(TomahawkResolver, {
                 name: "password",
                 widget: "password_edit",
                 property: "text"
-            }, {
-                name: "subsonic_url",
-                widget: "subsonic_url_edit",
-                property: "text"
-            }, {
-                name: "max_songs",
-                widget: "max_songs_spinbox",
-                property: "value"
             }],
             images: [{
                 "subsonic.png" : Tomahawk.readBase64("subsonic.png")
@@ -53,8 +50,7 @@ var SubsonicResolver = Tomahawk.extend(TomahawkResolver, {
 
         if (this.user !== userConfig.user ||
             this.password !== userConfig.password ||
-            this.subsonic_url !== userConfig.subsonic_url ||
-            this.max_songs !== userConfig.max_songs)
+            this.subsonic_url !== userConfig.subsonic_url)
         {
             this.init();
         }
@@ -81,6 +77,52 @@ var SubsonicResolver = Tomahawk.extend(TomahawkResolver, {
         return "enc:" + hex_string;
     },
 
+    /**
+     * Compares versions strings
+     * (version1 < version2) == -1
+     * (version1 = version2) == 0
+     * (version1 > version2) == 1
+     */
+    versionCompare: function (version1, version2) {
+        var v1 = version1.split('.').map(function (item) {
+            return parseInt(item);
+        });
+        var v2 = version2.split('.').map(function (item) {
+            return parseInt(item);
+        });
+        var length = Math.max(v1.length, v2.length);
+        var i = 0;
+
+        for (; i < length; i++) {
+            if (typeof v1[i] == "undefined" || v1[i] === null) {
+                if (typeof v2[i] == "undefined" || v2[i] === null) {
+                    // v1 == v2
+                    return 0;
+                } else if (v2[i] === 0) {
+                    continue;
+                } else {
+                    // v1 < v2
+                    return -1;
+                }
+            } else if (typeof v2[i] == "undefined" || v2[i] === null) {
+                if (v1[i] === 0) {
+                    continue;
+                } else {
+                    // v1 > v2
+                    return 1;
+                }
+            } else if (v2[i] > v1[i]) {
+                // v1 < v2
+                return -1;
+            } else if (v2[i] < v1[i]) {
+                // v1 > v2
+                return 1;
+            }
+        }
+        // v1 == v2
+        return 0;
+    },
+
     init: function()
     {
         var userConfig = this.getUserConfig();
@@ -89,102 +131,109 @@ var SubsonicResolver = Tomahawk.extend(TomahawkResolver, {
             return;
         }
 
-        Tomahawk.log("Doing Subsonic resolver init, got credentials from config.  User: " + userConfig.user);
         this.user = userConfig.user;
-        var enc_password = this.encodePassword(userConfig.password);
-        this.password = enc_password;
-        this.subsonic_url = userConfig.subsonic_url.replace(/\/+$/, "");
-        this.max_songs = userConfig.max_songs;
+        this.user = this.user.trim();
+        this.password = this.encodePassword(userConfig.password);
+        this.subsonic_url = userConfig.subsonic_url || "";
+        this.subsonic_url = this.subsonic_url.replace(/\/+$/, "");
+        if (!this.subsonic_url) {
+            this.subsonic_url = "http://localhost:4040";
+        } else {
+            if (this.subsonic_url.search(".*:\/\/") < 0) {
+                // couldn't find a proper protocol, so we default to "http://"
+                this.subsonic_url = "http://" + this.subsonic_url;
+            }
+            this.subsonic_url = this.subsonic_url.trim();
+        }
+
+        Tomahawk.log("Doing Subsonic resolver init, got credentials from config.  user: "
+        + this.user + ", subsonic_url: " + this.subsonic_url);
 
         this.element = document.createElement('div');
 
-        // We need at least 1.6.0 for resolve operations (JSON API support)
-        // and 1.8.0 for scriptcollection
-        this.supported_api_versions = [ "1.6.0", "1.7.0", "1.8.0" ];
-        this.subsonic_api = 0;
-
         //let's ask the server which API version it actually supports.
-        if (this.user === undefined || this.password === undefined || this.subsonic_url === undefined)
+        if (!this.user || !this.password || !this.subsonic_url)
             return;
 
         var that = this;
-        var ping_url = this.buildBaseUrl("/rest/ping.view") + "&f=json";
+        this.subsonic_api = "1.8.0";
+        var ping_url = this.buildBaseUrl("/rest/ping.view");
         Tomahawk.asyncRequest(ping_url, function(xhr) {
-            var doc = JSON.parse(xhr.responseText);
-            if ( typeof doc["subsonic-response"].version === 'undefined' )
+            var response = JSON.parse(xhr.responseText);
+            if (!response || !response["subsonic-response"]
+                || !response["subsonic-response"].version)
                 return;
 
-            var versionString = doc["subsonic-response"].version;
+            var version = response["subsonic-response"].version;
 
-            for ( var i = 0; i < that.supported_api_versions.length; ++i )
-            {
-                if ( that.supported_api_versions[i] === versionString )
-                {
-                    that.subsonic_api = i;
-                    break;
+            if (typeof Tomahawk.reportCapabilities == 'function') {
+                // We need at least 1.8.0
+                if (that.versionCompare(version, that.subsonic_api) >= 0) {
+                    Tomahawk.reportCapabilities(TomahawkResolverCapability.Browsable
+                        | TomahawkResolverCapability.AccountFactory);
                 }
             }
-
-            if ( typeof Tomahawk.reportCapabilities == 'function' )
-            {
-                if ( that.subsonic_api != 2 ) //version 1.8.0, scriptcollection support
-                    Tomahawk.reportCapabilities( TomahawkResolverCapability.AccountFactory );
-                else
-                    Tomahawk.reportCapabilities( TomahawkResolverCapability.Browsable | TomahawkResolverCapability.AccountFactory );
-            }
         } );
-
     },
 
-    getXmlAttribute: function(attrib_name, attributes)
-    {
-        for (var count = 0; count < attributes.length; ++count)
-        {
-            if (attrib_name === attributes[count].nodeName)
-                return attributes[count].nodeValue;
-        }
-        return null;
+    configTest: function () {
+        Tomahawk.asyncRequest(this.buildBaseUrl("/rest/ping.view"),
+            function (xhr) {
+                try {
+                    var response = JSON.parse(xhr.responseText);
+                } catch (e) {
+                    Tomahawk.onConfigTestResult(TomahawkConfigTestResultType.CommunicationError);
+                }
+                if (response && response["subsonic-response"]
+                    && response["subsonic-response"].status) {
+                    if (response["subsonic-response"].status === "ok") {
+                        Tomahawk.onConfigTestResult(TomahawkConfigTestResultType.Success);
+                    } else {
+                        if (response["subsonic-response"].error) {
+                            if (response["subsonic-response"].error.code === 40) {
+                                Tomahawk.onConfigTestResult(TomahawkConfigTestResultType.InvalidCredentials);
+                            } else if (response["subsonic-response"].error.code === 50) {
+                                Tomahawk.onConfigTestResult(TomahawkConfigTestResultType.InvalidAccount);
+                            } else if (response["subsonic-response"].error.message) {
+                                Tomahawk.onConfigTestResult(TomahawkConfigTestResultType.Other,
+                                    response["subsonic-response"].error.message);
+                            }
+                        } else {
+                            Tomahawk.onConfigTestResult(TomahawkConfigTestResultType.CommunicationError);
+                        }
+                    }
+                } else {
+                    Tomahawk.onConfigTestResult(TomahawkConfigTestResultType.CommunicationError);
+                }
+            }, {}, {
+                errorHandler: function (xhr) {
+                    if (xhr.status == 404 || xhr.status == 0) {
+                        Tomahawk.onConfigTestResult(TomahawkConfigTestResultType.CommunicationError);
+                    } else {
+                        Tomahawk.onConfigTestResult(TomahawkConfigTestResultType.Other,
+                            xhr.responseText.trim());
+                    }
+                }
+            }
+        );
     },
 
     buildBaseUrl : function(subsonic_view)
     {
-
         return this.subsonic_url + subsonic_view +
                 "?u=" + this.user +
                 "&p=" + this.password +
-                "&v=" + this.supported_api_versions[ this.subsonic_api ] +
-                "&c=tomahawk";
-    },
-
-    parseSongFromXmlAttributes : function(song_attributes)
-    {
-        return {
-            artist: this.getXmlAttribute("artist", song_attributes),
-            album: this.getXmlAttribute("album", song_attributes),
-            track: this.getXmlAttribute("title", song_attributes),
-            albumpos: this.getXmlAttribute("track", song_attributes),
-            source: this.settings.name,
-            size: this.getXmlAttribute("size", song_attributes),
-            duration: this.getXmlAttribute("duration", song_attributes),
-            bitrate: this.getXmlAttribute("bitRate", song_attributes),
-            url: this.buildBaseUrl("/rest/stream.view") + "&id=" + this.getXmlAttribute("id", song_attributes),
-            extension: this.getXmlAttribute("suffix", song_attributes),
-            year: this.getXmlAttribute("year", song_attributes)
-        };
-    },
-
-    decodeEntity : function(str)
-    {
-        this.element.innerHTML = str;
-        return this.element.textContent;
+                "&v=" + this.subsonic_api +
+                "&c=tomahawk" +
+                "&f=json";
     },
 
     parseSongFromAttributes : function(song_attributes)
     {
         return {
-            artist:     this.decodeEntity(song_attributes["artist"]),
-            album:      this.decodeEntity(song_attributes["album"]),
-            track:      this.decodeEntity(song_attributes["title"]),
+            artist:     song_attributes["artist"],
+            album:      song_attributes["album"],
+            track:      song_attributes["title"],
             albumpos:   song_attributes["track"],
             source:     this.settings.name,
             size:       song_attributes["size"],
@@ -192,11 +241,11 @@ var SubsonicResolver = Tomahawk.extend(TomahawkResolver, {
             bitrate:    song_attributes["bitRate"],
             url:        this.buildBaseUrl("/rest/stream.view") + "&id=" + song_attributes["id"],
             extension:  song_attributes["suffix"],
-            year:       song_attributes["year"],
+            year:       song_attributes["year"]
         };
     },
 
-    executeSearchQuery : function(qid, search_url, song_xml_tag, limit)
+    executeSearchQuery : function(qid, search_url, isResolve)
     {
         var results = [];
         var that = this; // needed so we can reference this from within the lambda
@@ -204,22 +253,27 @@ var SubsonicResolver = Tomahawk.extend(TomahawkResolver, {
         // Important to recognize this async request is doing a get and the user / password is passed in the search url
         // TODO: should most likely just use the xhr object and doing basic authentication.
         Tomahawk.asyncRequest(search_url, function(xhr) {
-            var dom_parser = new DOMParser();
-            xmlDoc = dom_parser.parseFromString(xhr.responseText, "text/xml");
+            doc = JSON.parse(xhr.responseText);
 
-            var search_results = xmlDoc.getElementsByTagName(song_xml_tag);
-            Tomahawk.log(search_results.length + " results returned.")
-            for (var count = 0; count < Math.min(search_results.length, limit); count++)
-            {
-                results.push(that.parseSongFromXmlAttributes(search_results[count].attributes));
+            var searchResults;
+            if (isResolve){
+                searchResults = doc["subsonic-response"].searchResult.match;
+            } else {
+                searchResults = doc["subsonic-response"].searchResult3.song;
             }
+            if (searchResults) {
+                Tomahawk.log(searchResults.length + " results returned.");
+                for (var i = 0; i < searchResults.length; i++) {
+                    results.push(that.parseSongFromAttributes(searchResults[i]));
+                }
 
-            var return_songs = {
-                qid: qid,
-                results: results
-            };
+                var return_songs = {
+                    qid: qid,
+                    results: results
+                };
 
-            Tomahawk.addTrackResults(return_songs);
+                Tomahawk.addTrackResults(return_songs);
+            }
         });
     },
 
@@ -234,23 +288,24 @@ var SubsonicResolver = Tomahawk.extend(TomahawkResolver, {
             var doc = JSON.parse(xhr.responseText);
             Tomahawk.log("subsonic artists query:" + artists_url);
             Tomahawk.log("subsonic artists response:" + xhr.responseText);
-            var artists = doc["subsonic-response"].artists.index;
+            if (!!doc["subsonic-response"].artists) { // No search results yields empty string in 1.9.0 at least.
+                var artists = doc["subsonic-response"].artists.index;
 
-            for (var i = 0; i < artists.length; i++)
-            {
-                if ( artists[i].artist instanceof Array )
+                for (var i = 0; i < artists.length; i++)
                 {
-                    for (var j = 0; j < artists[i].artist.length; j++)
+                    if ( artists[i].artist instanceof Array )
                     {
-                        results.push( artists[i].artist[j].name)
+                        for (var j = 0; j < artists[i].artist.length; j++)
+                        {
+                            results.push( artists[i].artist[j].name)
+                        }
+                    }
+                    else
+                    {
+                        results.push( artists[i].artist.name )
                     }
                 }
-                else
-                {
-                    results.push( artists[i].artist.name )
-                }
             }
-
             var return_artists = {
                qid: qid,
                artists: results
@@ -264,7 +319,6 @@ var SubsonicResolver = Tomahawk.extend(TomahawkResolver, {
     executeAlbumsQuery : function(qid, search_url, artist)
     {
         var results = [];
-        search_url += "&f=json"; //for large responses we surely want JSON
 
         // Important to recognize this async request is doing a get and the user / password is passed in the search url
         // TODO: should most likely just use the xhr object and doing basic authentication.
@@ -272,7 +326,7 @@ var SubsonicResolver = Tomahawk.extend(TomahawkResolver, {
             var doc = JSON.parse(xhr.responseText);
             Tomahawk.log("subsonic albums query:" + search_url);
             Tomahawk.log("subsonic albums response:" + xhr.responseText);
-            var albums = doc["subsonic-response"].searchResult2.album;
+            var albums = doc["subsonic-response"].searchResult3.album;
 
             if (albums instanceof Array)
             {
@@ -281,7 +335,7 @@ var SubsonicResolver = Tomahawk.extend(TomahawkResolver, {
                 {
                     if (albums[i].artist.toLowerCase() === artist.toLowerCase()) //search2 does partial matches
                     {
-                        results.push(albums[i].title)
+                        results.push(albums[i].name)
                     }
                 }
             }
@@ -289,7 +343,7 @@ var SubsonicResolver = Tomahawk.extend(TomahawkResolver, {
             {
                 if (albums.artist.toLowerCase() === artist.toLowerCase())
                 {
-                    results.push(albums.title);
+                    results.push(albums.name);
                 }
             }
 
@@ -308,7 +362,6 @@ var SubsonicResolver = Tomahawk.extend(TomahawkResolver, {
     {
         var results = [];
         var that = this;
-        search_url += "&f=json"; //for large responses we surely want JSON
 
         // Important to recognize this async request is doing a get and the user / password is passed in the search url
         // TODO: should most likely just use the xhr object and doing basic authentication.
@@ -328,18 +381,18 @@ var SubsonicResolver = Tomahawk.extend(TomahawkResolver, {
                     Tomahawk.log("tracks[i].album =" + tracks[i].album);
                     Tomahawk.log("album=           " + album);
 
-                    if (tracks[i].artist.toLowerCase() === artist.toLowerCase() && tracks[i].album.toLowerCase() === album.toLowerCase())
-                    {
+                    if (tracks[i].artist && artist
+                        && tracks[i].artist.toLowerCase() === artist.toLowerCase()
+                        && tracks[i].album && album
+                        && tracks[i].album.toLowerCase() === album.toLowerCase()) {
                         results.push(that.parseSongFromAttributes(tracks[i]));
                     }
                 }
-            }
-            else
-            {
-                if (tracks.artist.toLowerCase() === artist.toLowerCase() && tracks.album.toLowerCase() === album.toLowerCase())
-                {
-                    results.push(that.parseSongFromAttributes(tracks));
-                }
+            } else if (tracks && tracks.artist && artist
+                && tracks.artist.toLowerCase() === artist.toLowerCase()
+                && tracks.album && album
+                && tracks.album.toLowerCase() === album.toLowerCase()) {
+                results.push(that.parseSongFromAttributes(tracks));
             }
 
             var return_tracks = {
@@ -357,29 +410,29 @@ var SubsonicResolver = Tomahawk.extend(TomahawkResolver, {
     //! Please note i am using the deprecated search method in resolve
     //  The reason i am doing this is because it allows me to get a little more specific with the search
     //  since i have the artist, album and title i want to be as specific as possible
-    //  NOTE: I do use the newer search2.view in the search method below and it will populate each result with the
+    //  NOTE: I do use the newer search3.view in the search method below and it will populate each result with the
     //  appropriate url.
     resolve: function(qid, artist, album, title)
     {
-        if (this.user === undefined || this.password === undefined || this.subsonic_url === undefined)
+        if (!this.user || !this.password || !this.subsonic_url)
             return { qid: qid, results: [] };
 
         var search_url = this.buildBaseUrl("/rest/search.view") + "&artist=" + artist + "&album=" + album + "&title=" + title + "&count=1";
-        this.executeSearchQuery(qid, search_url, "match", 1);
+        this.executeSearchQuery(qid, search_url, true);
     },
 
     search: function( qid, searchString )
     {
-        if (this.user === undefined || this.password === undefined || this.subsonic_url === undefined)
+        if (!this.user || !this.password || !this.subsonic_url)
             return { qid: qid, results: [] };
 
-        var search_url = this.buildBaseUrl("/rest/search2.view") + "&songCount=" + this.max_songs + "&query=\"" + encodeURIComponent(searchString) + "\"";
-        this.executeSearchQuery(qid, search_url, "song", this.max_songs);
+        var search_url = this.buildBaseUrl("/rest/search3.view") + "&songCount=100&query=\"" + encodeURIComponent(searchString) + "\"";
+        this.executeSearchQuery(qid, search_url, false);
     },
 
     artists: function( qid )
     {
-        if (this.user === undefined || this.password === undefined || this.subsonic_url === undefined)
+        if (!this.user || !this.password || !this.subsonic_url)
             return { qid: qid, artists: [] };
 
         var artists_url = this.buildBaseUrl("/rest/getArtists.view");
@@ -388,17 +441,17 @@ var SubsonicResolver = Tomahawk.extend(TomahawkResolver, {
 
     albums: function( qid, artist )
     {
-        if (this.user === undefined || this.password === undefined || this.subsonic_url === undefined)
+        if (!this.user || !this.password || !this.subsonic_url)
             return { qid: qid, artist: artist, albums: [] };
 
-        var search_url = this.buildBaseUrl("/rest/search2.view") + "&songCount=0&artistCount=0&albumCount=900" +
+        var search_url = this.buildBaseUrl("/rest/search3.view") + "&songCount=0&artistCount=0&albumCount=900" +
                 "&query=\"" + encodeURIComponent(artist) + "\"";
         this.executeAlbumsQuery(qid, search_url, artist);
     },
 
     tracks: function( qid, artist, album )
     {
-        if (this.user === undefined || this.password === undefined || this.subsonic_url === undefined)
+        if (!this.user || !this.password || !this.subsonic_url)
             return { qid: qid, artist: artist, album: album, tracks: [] };
 
         // See note for resolve() about the search method
@@ -411,26 +464,23 @@ var SubsonicResolver = Tomahawk.extend(TomahawkResolver, {
 
     collection: function()
     {
-        //strip http:// and trailing slash
-        var desc = this.subsonic_url.replace(/^http:\/\//,"")
-                                    .replace(/\/$/, "")
-                                    .replace(/\/remote.php\/submedia/, "");
-
-        var return_object = {
-            prettyname: "Subsonic",
-            description: desc,
-            iconfile: "subsonic-icon.png"
-        };
-
+        var prettyname;
+        var iconfile;
         //Icon and text specific for Runners-ID
-        if (desc.indexOf("runners-id.com") !== -1 ||
-            desc.indexOf("runners-id.org") !== -1 )
-        {
-            return_object["prettyname"] = "Runners-ID";
-            return_object["iconfile"] = "runnersid-icon.png";
+        if (this.subsonic_url.indexOf("runners-id.com") !== -1 ||
+            this.subsonic_url.indexOf("runners-id.org") !== -1) {
+            prettyname = "Runners-ID";
+            iconfile = "runnersid-icon.png";
+        } else {
+            prettyname = "Subsonic";
+            iconfile = "subsonic-icon.png";
         }
 
-        return return_object;
+        return {
+            prettyname: prettyname,
+            description: this.subsonic_url,
+            iconfile: iconfile
+        };
     }
 });
 
