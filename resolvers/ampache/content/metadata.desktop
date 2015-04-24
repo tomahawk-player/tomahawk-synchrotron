@@ -1,7 +1,7 @@
 ############################################################################
 ## Desktop file generated from JSON file 'metadata.json' 
 ##
-## Created: 2013-04-06 15:01:06 UTC
+## Created: 2015-04-24 05:17:57 UTC
 ##      by: json2desktop.rb, https://github.com/tomahawk-player
 ##
 ##                         #### WARNING! ####
@@ -10,7 +10,7 @@
 
 [Desktop Entry]
 Name=Ampache
-Comment=Connects to an Ampache or ownCloud server and resolves tracks
+Comment=Connects to an Ampache or ownCloud server and resolves tracks.
 
 Type=Service
 X-KDE-ServiceTypes=Tomahawk/Resolver
@@ -20,5 +20,5 @@ X-KDE-PluginInfo-Name=ampache
 X-KDE-PluginInfo-Category=Resolver
 X-KDE-PluginInfo-Author=Dominik, Leo and Teo
 X-KDE-PluginInfo-Email=teo@kde.org
-X-KDE-PluginInfo-Version=0.3.1
+X-KDE-PluginInfo-Version=0.3.2
 X-KDE-PluginInfo-Website=http://gettomahawk.com

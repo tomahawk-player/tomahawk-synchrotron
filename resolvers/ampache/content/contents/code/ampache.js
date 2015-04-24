@@ -36,16 +36,16 @@ var AmpacheResolver = Tomahawk.extend(TomahawkResolver, {
 
             "widget": uiData,
             fields: [{
+                name: "server",
+                widget: "serverLineEdit",
+                property: "text"
+            }, {
                 name: "username",
                 widget: "usernameLineEdit",
                 property: "text"
             }, {
                 name: "password",
                 widget: "passwordLineEdit",
-                property: "text"
-            }, {
-                name: "ampache",
-                widget: "ampacheLineEdit",
                 property: "text"
             }],
             images: [{
@@ -58,13 +58,9 @@ var AmpacheResolver = Tomahawk.extend(TomahawkResolver, {
 
     newConfigSaved: function () {
         var userConfig = this.getUserConfig();
-        if ((userConfig.username != this.username) || (userConfig.password != this.password) || (userConfig.ampache != this.ampache)) {
+        if ((userConfig.username != this.username) || (userConfig.password != this.password)
+            || (userConfig.server != this.server)) {
             Tomahawk.log("Saving new Ampache credentials with username:" << userConfig.username);
-
-            this.username = userConfig.username;
-            this.password = userConfig.password;
-            this.ampache = userConfig.ampache;
-
             window.sessionStorage["ampacheAuth"] = "";
             this.init();
         }
@@ -74,8 +70,13 @@ var AmpacheResolver = Tomahawk.extend(TomahawkResolver, {
     {
         // prepare handshake arguments
         var time = Tomahawk.timestamp();
-        var key = Tomahawk.sha256(this.password);
-        this.passphrase = Tomahawk.sha256(time + key);
+        if (typeof CryptoJS !== "undefined" && typeof CryptoJS.SHA256 == "function") {
+            var key = CryptoJS.SHA256(this.password).toString(CryptoJS.enc.Hex);
+            this.passphrase = CryptoJS.SHA256(time + key).toString(CryptoJS.enc.Hex);
+        } else {
+            var key = Tomahawk.sha256(this.password);
+            this.passphrase = Tomahawk.sha256(time + key);
+        }
 
         // do the handshake
         this.params = {
@@ -104,10 +105,38 @@ var AmpacheResolver = Tomahawk.extend(TomahawkResolver, {
         if (pingInterval) window.setInterval(this.ping, pingInterval - 60);
     },
 
+    configTest: function () {
+        var that = this;
+        this.prepareHandshake();
+        Tomahawk.asyncRequest(this.generateUrl('handshake', this.passphrase, this.params),
+            function (xhr) {
+                // parse the result
+                var domParser = new DOMParser();
+                xmlDoc = domParser.parseFromString(xhr.responseText, "text/xml");
+                that.applyHandshake(xmlDoc);
+
+                if (!that.auth) {
+                    Tomahawk.log("auth failed: " + xhr.responseText);
+                    var error = xmlDoc.getElementsByTagName("error")[0];
+                    if (typeof error != 'undefined' && error.getAttribute("code") == "403") {
+                        Tomahawk.onConfigTestResult(TomahawkConfigTestResultType.InvalidAccount);
+                    } else {
+                        Tomahawk.onConfigTestResult(TomahawkConfigTestResultType.InvalidCredentials);
+                    }
+                } else {
+                    Tomahawk.onConfigTestResult(TomahawkConfigTestResultType.Success);
+                }
+            }, {}, {
+                errorHandler: function () {
+                    Tomahawk.onConfigTestResult(TomahawkConfigTestResultType.CommunicationError);
+                }
+            });
+    },
+
     init: function () {
         // check resolver is properly configured
         var userConfig = this.getUserConfig();
-        if (!userConfig.username || !userConfig.password || !userConfig.ampache) {
+        if (!userConfig.username || !userConfig.password || !userConfig.server) {
             Tomahawk.log("Ampache Resolver not properly configured!");
             return;
         }
@@ -120,7 +149,16 @@ var AmpacheResolver = Tomahawk.extend(TomahawkResolver, {
 
         this.username = userConfig.username;
         this.password = userConfig.password;
-        this.ampache = userConfig.ampache;
+        this.server = userConfig.server;
+        if (!this.server) {
+            this.server = "http://localhost/ampache";
+        } else {
+            if (this.server.search(".*:\/\/") < 0) {
+                // couldn't find a proper protocol, so we default to "http://"
+                this.server = "http://" + this.server;
+            }
+            this.server = this.server.trim();
+        }
 
         this.prepareHandshake();
 
@@ -154,16 +192,21 @@ var AmpacheResolver = Tomahawk.extend(TomahawkResolver, {
     },
 
     generateUrl: function (action, auth, params) {
-        var ampacheUrl = this.ampache + "/server/xml.server.php?";
+        var ampacheUrl = this.server.replace(/\/$/, "") + "/server/xml.server.php?";
         if (params === undefined) params = [];
         params['action'] = action;
         params['auth'] = auth;
 
-
+        var first = true;
         for (param in params) {
             if (typeof (params[param]) == 'string') params[param] = params[param].trim();
 
-            ampacheUrl += encodeURIComponent(param) + "=" + encodeURIComponent(params[param]) + "&";
+            if (!first) {
+                ampacheUrl += "&";
+            } else {
+                first = false;
+            }
+            ampacheUrl += encodeURIComponent(param) + "=" + encodeURIComponent(params[param]);
         }
         return ampacheUrl;
     },
@@ -279,8 +322,6 @@ var AmpacheResolver = Tomahawk.extend(TomahawkResolver, {
         if (!this.ready) return {
             qid: qid
         };
-
-        userConfig = this.getUserConfig();
 
         var params = {
             filter: searchString,
@@ -400,7 +441,8 @@ var AmpacheResolver = Tomahawk.extend(TomahawkResolver, {
     collection: function()
     {
         //strip http:// and trailing slash
-        var desc = this.ampache.replace(/^http:\/\//,"")
+        var desc = this.server.replace(/^http:\/\//,"")
+                               .replace(/^https:\/\//,"")
                                .replace(/\/$/, "")
                                .replace(/\/remote.php\/ampache/, "");
 
@@ -414,7 +456,7 @@ var AmpacheResolver = Tomahawk.extend(TomahawkResolver, {
             return_object["trackcount"] = this.trackCount;
 
         //stupid check if it's an ownCloud instance
-        if (this.ampache.indexOf("/remote.php/ampache") !== -1)
+        if (this.server.indexOf("/remote.php/ampache") !== -1)
         {
             return_object["prettyname"] = "ownCloud";
             return_object["iconfile"] = "owncloud-icon.png";
