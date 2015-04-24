@@ -1,6 +1,16 @@
+############################################################################
+## Desktop file generated from JSON file 'metadata.json' 
+##
+## Created: 2015-04-24 05:13:59 UTC
+##      by: json2desktop.rb, https://github.com/tomahawk-player
+##
+##                         #### WARNING! ####
+##              All changes made to this file will be lost!
+############################################################################
+
 [Desktop Entry]
 Name=4Shared
-Comment=Looks for tracks to play from www.4shared.com
+Comment=Looks for tracks to play from www.4shared.com.
 
 Type=Service
 X-KDE-ServiceTypes=Tomahawk/Resolver
@@ -10,6 +20,5 @@ X-KDE-PluginInfo-Name=4shared
 X-KDE-PluginInfo-Category=Resolver
 X-KDE-PluginInfo-Author=lasconic
 X-KDE-PluginInfo-Email=lasconic@gmail.com
-X-KDE-PluginInfo-Version=0.1.4
+X-KDE-PluginInfo-Version=0.1.6
 X-KDE-PluginInfo-Website=http://gettomahawk.com
-
