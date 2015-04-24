@@ -2,6 +2,7 @@
  *
  *   Copyright 2012, Adrian Sampson <adrian@radbox.org>
  *   Copyright 2013, Uwe L. Korn <uwelk@xhochy.com>
+ *   Copyright 2014, Enno Gottschalk <mrmaffen@googlemail.com>
  *
  *   Tomahawk is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -28,6 +29,26 @@ var AUDIO_TYPES = {
     'MusePack': ['mpc',  'audio/x-musepack']
 };
 
+// Backward compability for Tomahawk<0.7.100/API<0.2.0 which did not support authed requests
+if (Tomahawk.hasOwnProperty('apiVersion') && Tomahawk.atLeastVersion('0.2.0')) {
+    var passwordRequest = function (url, username, password, cb, errorHandler) {
+        Tomahawk.asyncRequest(url, cb, {}, {username: username, password: password, errorHandler: errorHandler});
+    };
+} else {
+    var passwordRequest = function (url, username, password, cb, errorHandler) {
+        var xmlHttpRequest = new XMLHttpRequest();
+        xmlHttpRequest.open('GET', url, true, username, password);
+        xmlHttpRequest.onreadystatechange = function() {
+            if (xmlHttpRequest.readyState == 4 && xmlHttpRequest.status == 200) {
+                cb(xmlHttpRequest);
+            } else if (xmlHttpRequest.readyState == 4) {
+                errorHandler(xmlHttpRequest);
+            }
+        };
+        xmlHttpRequest.send(null);
+    };
+}
+
 var BeetsResolver = Tomahawk.extend(TomahawkResolver, {
     trackCount: -1,
     settings: {
@@ -39,7 +60,11 @@ var BeetsResolver = Tomahawk.extend(TomahawkResolver, {
 
     // Resolution.
     resolve: function (qid, artist, album, title) {
-        this.beetsQuery(qid, ['artist:' + artist, 'album:' + album, 'title:' + title]);
+        if (album == '') {
+            this.beetsQuery(qid, ['artist:' + artist, 'title:' + title]);
+        } else {
+            this.beetsQuery(qid, ['artist:' + artist, 'album:' + album, 'title:' + title]);
+        }
     },
 
     search: function (qid, searchString) {
@@ -47,7 +72,11 @@ var BeetsResolver = Tomahawk.extend(TomahawkResolver, {
     },
 
     baseUrl: function () {
-        return 'http://' + this.host + ':' + this.port;
+        if (this.useTLS) {
+            return 'https://' + this.host + ':' + this.port;
+        } else {
+            return 'http://' + this.host + ':' + this.port;
+        }
     },
 
     beetsQuery: function (qid, queryParts) {
@@ -59,10 +88,10 @@ var BeetsResolver = Tomahawk.extend(TomahawkResolver, {
         });
         url = url.substring(0, url.length - 1);  // Remove last /.
 
-        Tomahawk.asyncRequest(url, function (xhr) {
+        passwordRequest(url, this.username, this.password, function (xhr) {
             var resp = JSON.parse(xhr.responseText),
-                items = resp.results,
-                searchResults = [];
+            items = resp.results,
+            searchResults = [];
             items.forEach(function (item) {
                 var type_info = AUDIO_TYPES[item.format];
                 searchResults.push({
@@ -101,6 +130,22 @@ var BeetsResolver = Tomahawk.extend(TomahawkResolver, {
                 name: "port",
                 widget: "portField",
                 property: "text"
+            }, {
+                name: "useTLS",
+                widget: "tlsCheckBox",
+                property: "checked"
+            },{
+                name: "useAuth",
+                widget: "useAuthCheckBox",
+                property: "checked"
+            }, {
+                name: "username",
+                widget: "usernameField",
+                property: "text"
+            }, {
+                name: "password",
+                widget: "passwordField",
+                property: "text"
             }]
         };
     },
@@ -109,46 +154,70 @@ var BeetsResolver = Tomahawk.extend(TomahawkResolver, {
     },
     init: function () {
         var userConfig = this.getUserConfig(),
-            that = this,
-            xmlHttpRequest = new XMLHttpRequest();
+            that = this;
         this.host = userConfig.host || 'localhost';
         this.port = parseInt(userConfig.port, 10);
+        this.useTLS = userConfig.useTLS;
+        this.useAuth = userConfig.useAuth;
+        if (this.useAuth) {
+            this.username = userConfig.username;
+            this.password = userConfig.password;
+        } else {
+            this.username = null;
+            this.password = null;
+        }
         if (isNaN(this.port) || !this.port) {
             this.port = 8337;
         }
         // Invalidate trackCount
         // Check if /stats is available and we can get enough information for ScriptCollection support and track count
         // (this works for beets 1.2.1+)
-        xmlHttpRequest.open('GET', this.baseUrl() + '/stats', true);
-        xmlHttpRequest.onreadystatechange = function() {
-            if (xmlHttpRequest.readyState == 4 && xmlHttpRequest.status == 200) {
-                that.trackCount = parseInt(JSON.parse(xmlHttpRequest.responseText).items);
+        passwordRequest(this.baseUrl() + '/stats', this.username, this.password, function (xhr) {
+            // Success
+            that.trackCount = parseInt(JSON.parse(xhr.responseText).items);
+            Tomahawk.reportCapabilities(TomahawkResolverCapability.Browsable);
+        }, function (xhr) {
+            // Failed
+            that.trackCount = -1;
+            // Check if /artist/ is available and we can get enough information for ScriptCollection support
+            // (this is needed for beets 1.1.0-1.2.0)
+            passwordRequest(that.baseUrl() + '/artist/', this.username, this.password, function () {
+                // Success
                 Tomahawk.reportCapabilities(TomahawkResolverCapability.Browsable);
-            } else if (xmlHttpRequest.readyState === 4) {
-                that.trackCount = -1;
-                // Check if /artist/ is available and we can get enough information for ScriptCollection support
-                // (this is needed for beets 1.1.0-1.2.0)
-                // Use new XMLHttpRequest instance
-                xmlHttpRequest = new XMLHttpRequest();
-                xmlHttpRequest.open('GET', that.baseUrl() + '/artist/', true);
-                xmlHttpRequest.onreadystatechange = function() {
-                    if (xmlHttpRequest.readyState == 4 && xmlHttpRequest.status == 200) {
-                        Tomahawk.reportCapabilities(TomahawkResolverCapability.Browsable);
-                    } else if (xmlHttpRequest.readyState === 4) {
-                        Tomahawk.reportCapabilities(TomahawkResolverCapability.NullCapability);
+            }, function () {
+                // Failed
+                Tomahawk.reportCapabilities(TomahawkResolverCapability.NullCapability);
+            });
+        });
+    },
+
+    configTest: function () {
+        Tomahawk.asyncRequest(this.baseUrl(),
+            function (xhr) {
+                Tomahawk.onConfigTestResult(TomahawkConfigTestResultType.Success);
+            }, {}, {
+                method: 'HEAD',
+                username: this.username,
+                password: this.password,
+                errorHandler: function (xhr) {
+                    if (xhr.status == 403) {
+                        Tomahawk.onConfigTestResult(TomahawkConfigTestResultType.InvalidCredentials);
+                    } else if (xhr.status == 404 || xhr.status == 0) {
+                        Tomahawk.onConfigTestResult(TomahawkConfigTestResultType.CommunicationError);
+                    } else {
+                        Tomahawk.onConfigTestResult(TomahawkConfigTestResultType.Other,
+                            xhr.responseText.trim());
                     }
-                };
-                xmlHttpRequest.send(null);
+                }
             }
-        }
-        xmlHttpRequest.send(null);
+        );
     },
 
     // Script Collection Support
 
     artists: function (qid) {
         var url = this.baseUrl() + '/artist/';
-        Tomahawk.asyncRequest(url, function (xhr) {
+        passwordRequest(url, this.username, this.password, function (xhr) {
             var response = JSON.parse(xhr.responseText);
             Tomahawk.addArtistResults({
                 qid: qid,
@@ -159,9 +228,9 @@ var BeetsResolver = Tomahawk.extend(TomahawkResolver, {
 
     albums: function (qid, artist) {
         var url = this.baseUrl() + '/album/query/albumartist:' + encodeURIComponent(artist);
-        Tomahawk.asyncRequest(url, function (xhr) {
+        passwordRequest(url, this.username, this.password, function (xhr) {
             var response = JSON.parse(xhr.responseText),
-                results = [];
+            results = [];
             response.results.forEach(function (item) {
                 results.push(item.album);
             });
@@ -174,12 +243,11 @@ var BeetsResolver = Tomahawk.extend(TomahawkResolver, {
     },
 
     tracks: function (qid, artist, album) {
-        var url = this.baseUrl() + '/item/query/' + encodeURIComponent('artist:' + artist) + '/' + encodeURIComponent('album:' + album),
-            baseUrl = this.baseUrl();
-        Tomahawk.log(url);
-        Tomahawk.asyncRequest(url, function (xhr) {
+        var url = this.baseUrl() + '/item/query/' + encodeURIComponent('artist:' + artist) + '/' + encodeURIComponent('album:' + album);
+        var baseUrl = this.baseUrl();
+        passwordRequest(url, this.username, this.password, function (xhr) {
             var response = JSON.parse(xhr.responseText),
-                searchResults = [];
+            searchResults = [];
             response.results.forEach(function (item) {
                 var type_info = AUDIO_TYPES[item.format];
                 searchResults.push({
