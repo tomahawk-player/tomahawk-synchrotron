@@ -496,7 +496,7 @@ var GMusicResolver = Tomahawk.extend( TomahawkResolver, {
     _loadSettings: function (callback, doConfigTest) {
         var that = this;
         Tomahawk.asyncRequest(that._webURL
-            + 'services/loadsettings?u=0&xt='
+            + 'services/fetchsettings?u=0&xt='
             + encodeURIComponent( that._xt ),
             function (request) {
                 var response = JSON.parse( request.responseText );
@@ -511,23 +511,23 @@ var GMusicResolver = Tomahawk.extend( TomahawkResolver, {
                     return;
                 }
 
-                that._allAccess = response.settings.isSubscription;
+                that._allAccess = response.settings.entitlementInfo.isSubscription;
                 Tomahawk.log( "Google Play Music All Access is "
                     + (that._allAccess ? "enabled" : "disabled" )
                 );
 
                 var device = null;
-                var devices = response.settings.devices;
+                var devices = response.settings.uploadDevice;
                 for (var i = 0; i < devices.length; i++) {
                     var entry = devices[ i ];
-                    if ('PHONE' == entry.type || 'IOS' == entry.type) {
+                    if (2 == entry.deviceType) {
                         device = entry;
                         break;
                     }
                 }
 
                 if (device) {
-                    if ('PHONE' == device.type) {
+                    if ('2' == device.deviceType) {
                         // We have an Android device id
                         that._deviceId = device.id.slice( 2 );
                         Tomahawk.log(that.settings.name + " using Android device ID '"
