@@ -51,7 +51,7 @@ var BeetsResolver = Tomahawk.extend(Tomahawk.Resolver, {
     },
 
     newConfigSaved: function (newConfig) {
-        console.log("Invalidating cache");
+        Tomahawk.log("Invalidating cache");
         var that = this;
         beetsCollection.wipe({id: beetsCollection.settings.id}).then(function () {
             window.localStorage.removeItem("beets_trackCount");
@@ -83,9 +83,7 @@ var BeetsResolver = Tomahawk.extend(Tomahawk.Resolver, {
     },
 
     init: function () {
-        console.log('INIT', this.getUserConfig());
         var config = this._sanitizeConfig(this.getUserConfig());
-        console.log('INIT2', config);
         this._server = config.server;
         this._username = config.username;
         this._password = config.password;
@@ -101,10 +99,10 @@ var BeetsResolver = Tomahawk.extend(Tomahawk.Resolver, {
         }).then(function (result) {
             var lastCollectionUpdate = window.localStorage["beets_last_collection_update"];
             if (lastCollectionUpdate && lastCollectionUpdate == result) {
-                console.log("Collection database has not been changed since last time.");
+                Tomahawk.log("Collection database has not been changed since last time.");
                 return that._fetchAndStoreCollection();
             } else {
-                console.log("Collection database has been changed. Wiping and re-fetching...");
+                Tomahawk.log("Collection database has been changed. Wiping and re-fetching...");
                 window.localStorage.removeItem("beets_trackCount");
                 window.localStorage.removeItem("beets_albumCount");
                 return beetsCollection.wipe({
@@ -142,9 +140,8 @@ var BeetsResolver = Tomahawk.extend(Tomahawk.Resolver, {
                     msg += "Album count has changed from " + window.localStorage["beets_albumCount"]
                         + " to " + albumCount + ". ";
                 }
-                console.log(msg + "Updating collection ...");
+                Tomahawk.log(msg + "Updating collection ...");
                 return Tomahawk.get(that._server + "item", settings).then(function (response) {
-                    console.log("RESPONSE: ", response);
                     var searchResults = [];
                     response.items.forEach(function (item) {
                         searchResults.push({
@@ -159,14 +156,11 @@ var BeetsResolver = Tomahawk.extend(Tomahawk.Resolver, {
                             duration: Math.floor(item.length)
                         });
                     });
-                    console.log("wipe collection");
                     beetsCollection.wipe({id: beetsCollection.settings.id}).then(function () {
-                        console.log("wiped collection");
                         beetsCollection.addTracks({
                             id: beetsCollection.settings.id,
                             tracks: searchResults
                         }).then(function (newRevision) {
-                            console.log("tracks added");
                             window.localStorage["beets_trackCount"] = trackCount;
                             window.localStorage["beets_albumCount"] = albumCount;
                             window.localStorage["beets_last_collection_update"] = newRevision;
@@ -174,7 +168,7 @@ var BeetsResolver = Tomahawk.extend(Tomahawk.Resolver, {
                     });
                 });
             } else {
-                console.log("Track count is still " + trackCount
+                Tomahawk.log("Track count is still " + trackCount
                     + ". Album count is still " + albumCount
                     + ". No collection update necessary.");
                 beetsCollection.addTracks({

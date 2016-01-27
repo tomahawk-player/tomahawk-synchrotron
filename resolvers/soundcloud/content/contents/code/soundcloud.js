@@ -86,8 +86,7 @@ var SoundcloudResolver = Tomahawk.extend(Tomahawk.Resolver, {
             this.includeLive = false;
         }
 
-        console.log('REGISTER LINK PARSER', this);
-//         Tomahawk.PluginManager.registerPlugin('linkParser', this);
+        Tomahawk.reportCapabilities(TomahawkResolverCapability.UrlLookup);
     },
 
     _isValidTrack: function (trackTitle, origTitle) {
@@ -291,8 +290,6 @@ var SoundcloudResolver = Tomahawk.extend(Tomahawk.Resolver, {
     },
 
     canParseUrl: function (params) {
-        console.log('CAN PARSE URL', params);
-
         var url = params.url;
         var type = params.type;
         // Soundcloud only returns tracks and playlists
@@ -320,8 +317,6 @@ var SoundcloudResolver = Tomahawk.extend(Tomahawk.Resolver, {
     },
 
     lookupUrl: function (params) {
-        console.log('LOOKUP URL', params);
-
         var url = params.url;
 
         var that = this;
