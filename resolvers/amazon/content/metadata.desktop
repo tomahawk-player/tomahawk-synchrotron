@@ -1,0 +1,24 @@
+############################################################################
+## Desktop file generated from JSON file 'metadata.json' 
+##
+## Created: 2015-04-24 05:20:33 UTC
+##      by: json2desktop.rb, https://github.com/tomahawk-player
+##
+##                         #### WARNING! ####
+##              All changes made to this file will be lost!
+############################################################################
+
+[Desktop Entry]
+Name=Amazon
+Comment=Streams music from Amazon Music
+
+Type=Service
+X-KDE-ServiceTypes=Tomahawk/Resolver
+X-Synchrotron-MainScript=contents/code/amazon.js
+
+X-KDE-PluginInfo-Name=amazon
+X-KDE-PluginInfo-Category=Resolver
+X-KDE-PluginInfo-Author=Creepy Guy In The Corner
+X-KDE-PluginInfo-Email=creep@tomahawk-player.org
+X-KDE-PluginInfo-Version=0.0.1
+X-KDE-PluginInfo-Website=http://gettomahawk.com
