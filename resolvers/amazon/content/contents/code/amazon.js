@@ -90,16 +90,20 @@ var AmazonResolver = Tomahawk.extend( Tomahawk.Resolver, {
     },
 
     testConfig: function (config) {
-        return this._getLoginPromise(config, true).then(function (resp) {
-            var appConfigRe = /amznMusic.appConfig *?= *?({.*});/g;
-            if (appConfigRe.exec(resp) != null) {
-                return Tomahawk.ConfigTestResultType.Success;
-            } else {
-                return Tomahawk.ConfigTestResultType.InvalidCredentials;
-            }
-        }, function (error) {
-            return "Internal error.";
-        });
+        var that = this;
+        return that._get(that.api_location + "gp/dmusic/cloudplayer/forceSignOut").then(
+            function () {
+                return that._getLoginPromise(config, true).then(function (resp) {
+                    var appConfigRe = /amznMusic.appConfig *?= *?({.*});/g;
+                    if (appConfigRe.exec(resp) != null) {
+                        return Tomahawk.ConfigTestResultType.Success;
+                    } else {
+                        return Tomahawk.ConfigTestResultType.InvalidCredentials;
+                    }
+                }, function (error) {
+                    return "Internal error.";
+                });
+            });
     },
 
     _request: function(url, method, options, use_csrf_headers){
@@ -113,7 +117,8 @@ var AmazonResolver = Tomahawk.extend( Tomahawk.Resolver, {
             options.headers['csrf-ts'] = this._appConfig['CSRFTokenConfig']['csrf_ts'];
         }
 
-        options.headers['User-Agent'] = 'Mozilla/6.0 (X11; Ubuntu; Linux x86_64; rv:40.0) Gecko/20100101 Firefox/40.0';
+        options.headers['User-Agent'] = 'Mozilla/5.0 (X11; Linux x86_64; rv:48.0) Gecko/20100101 Firefox/48.0';
+        options.headers['Accept-Language'] = 'en-US,en;q=0.5';
 
         if (method == 'POST')
             return Tomahawk.post( url, options);
@@ -126,6 +131,8 @@ var AmazonResolver = Tomahawk.extend( Tomahawk.Resolver, {
     _get: function (url, options, use_csrf_headers) {
         return this._request(url, 'GET', options, use_csrf_headers);
     },
+
+    _domains : ['.com', '.de', '.co.uk'],
 
     init: function() {
         var config = this.getUserConfig();
@@ -140,9 +147,8 @@ var AmazonResolver = Tomahawk.extend( Tomahawk.Resolver, {
             return;
         }
 
-        var domains = ['.com', '.de', '.co.uk'];
 
-        this.api_location = 'https://www.amazon' + domains[this._region] + '/';
+        this.api_location = 'https://www.amazon' + this._domains[this._region] + '/';
         var that = this;
 
         return this._get(this.api_location + "gp/dmusic/cloudplayer/forceSignOut").then(function(resp){
@@ -358,7 +364,12 @@ var AmazonResolver = Tomahawk.extend( Tomahawk.Resolver, {
                     params['create'] = '0';
                     var actionRe = /action="([^"]+)"/g ;
                     var url = actionRe.exec(resp)[1];
-                    var options = {data: params};
+                    var tokenRE = /token...([A-F0-9]+)/g ;
+                    var token = tokenRE.exec(resp)[1];
+                    var options = {
+                        data: params,
+                        headers : { 'Referer' : 'https://www.amazon' + that._domains[that._region] + '/ap/signin?_encoding=UTF8&accountStatusPolicy=P1&openid.assoc_handle=usflex&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.pape.max_auth_age=0&openid.return_to=https%3A%2F%2Fwww.amazon' + that._domains[that._region] + '%3A443%2Fgp%2Fredirect.html%3F_encoding%3DUTF8%26location%3Dhttps%253A%252F%252Fmusic.amazon' + that._domains[that._region] + '%253Fref_%253Ddm_wcp_sfso%26source%3Dstandards%26token%3D' + token + '%23&pageId=amzn_cpweb&showRmrMe=1' }
+                    };
                     if (isTestingConfig) {
                         options.isTestingConfig = true;
                     }
@@ -387,8 +398,16 @@ var AmazonResolver = Tomahawk.extend( Tomahawk.Resolver, {
                 that.logged_in = 1;
                 that.api_location = 'https://' + that._appConfig['serverName'] + '/';
                 amazonCollection.settings['description'] = that._appConfig['customerName'];
-                that._checkForLibraryUpdates();
                 Tomahawk.PluginManager.registerPlugin("collection", amazonCollection);
+                that._checkForLibraryUpdates().then(function(){
+                    amazonCollection.addTracks({
+                        id: amazonCollection.settings.id,
+                        tracks: []
+                    });
+                }, function (error) {
+                    Tomahawk.PluginManager.unregisterPlugin("collection", amazonCollection);
+                    Tomahawk.log("Failed updating Library:" + error);
+                });
                 Tomahawk.log(that.settings.name + " successfully logged in.");
             },
             function (error) {
@@ -422,7 +441,7 @@ var AmazonResolver = Tomahawk.extend( Tomahawk.Resolver, {
         return this._post(this.api_location + 'cirrus/', {
             data: _query
         }, true).then( function (response) {
-            var serverVersion = response.getGlobalLastUpdatedDateResponse.getGlobalLastUpdatedDateResult.date;
+            var serverVersion = response.getGlobalLastUpdatedDateResponse.getGlobalLastUpdatedDateResult.date.toString();
             if( currentVersion != serverVersion ) {
                 Tomahawk.log('Server-side library updated, syncing');
                 amazonCollection.wipe({id: amazonCollection.settings.id}).then(function () {
