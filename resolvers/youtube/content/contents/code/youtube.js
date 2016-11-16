@@ -95,7 +95,7 @@ var YoutubeResolver = Tomahawk.extend(Tomahawk.Resolver, {
             this.includeCovers = userConfig.includeCovers;
             this.includeRemixes = userConfig.includeRemixes;
             this.includeLive = userConfig.includeLive;
-            this.qualityPreference = userConfig.qualityPreference;
+            this.qualityPreference = userConfig.qualityPreference || 2;
             this.debugMode = userConfig.debugMode;
         } else {
             this.includeCovers = false;
@@ -148,13 +148,46 @@ var YoutubeResolver = Tomahawk.extend(Tomahawk.Resolver, {
         };
     },
 
+    /**
+     * Defines this Resolver's config dialog UI.
+     */
+    configUi: [
+        {
+            id: "includeCovers",
+            type: "checkbox",
+            label: "Include cover versions"
+        },
+        {
+            id: "includeRemixes",
+            type: "checkbox",
+            label: "Include remix versions"
+        },
+        {
+            id: "includeLive",
+            type: "checkbox",
+            label: "Include live versions"
+        },
+        {
+            id: "qualityPreference",
+            type: "dropdown",
+            label: "Maximal audio quality",
+            items: ["128", "192", "256"],
+            defaultValue: 2
+        },
+        {
+            id: "debugMode",
+            type: "checkbox",
+            label: "Debug log output"
+        }
+    ],
+
     newConfigSaved: function (newConfig) {
         "use strict";
 
         this.includeCovers = newConfig.includeCovers;
         this.includeRemixes = newConfig.includeRemixes;
         this.includeLive = newConfig.includeLive;
-        this.qualityPreference = newConfig.qualityPreference;
+        this.qualityPreference = newConfig.qualityPreference || 2;
         this.debugMode = newConfig.debugMode;
     },
 
@@ -484,6 +517,15 @@ var YoutubeResolver = Tomahawk.extend(Tomahawk.Resolver, {
                             urlPromise = that._parseURLS(jsonMap.args.url_encoded_fmt_stream_map,
                                 html);
                         }
+                    } else if (jsonMap.args.dashmpd) {
+                        //Theoretically we could parse manifest, select quality
+                        //we want and then return it. 
+                        //But it just doesn't seem to be worth it, unless
+                        //someone really wanna do it
+                        Tomahawk.log("Found MPEG-DASH, just letting VLC handle it");
+                        urlPromise = {url: jsonMap.args.dashmpd};
+                    } else {
+                        Tomahawk.log("Couldn't find MPEG-DASH manifest or adaptive_fmts, aborting");
                     }
                     if (urlPromise) {
                         return RSVP.Promise.resolve(urlPromise).then(function (result) {
@@ -510,50 +552,6 @@ var YoutubeResolver = Tomahawk.extend(Tomahawk.Resolver, {
         } else if (this.debugMode) {
             Tomahawk.log(this.settings.name + " debug: " + msg);
         }
-    },
-
-    _hasPreferredQuality: function (urlString, quality) {
-        "use strict";
-
-        if (this.qualityPreference === undefined) {
-            this._debugMsg("ASSERT: quality undefined!");
-            return true;
-        }
-
-        return !!(quality === this._getPreferredQuality()
-        || urlString.indexOf("quality=" + this._getPreferredQuality()) !== -1);
-
-    },
-
-    _getPreferredQuality: function () {
-        "use strict";
-
-        if (this.qualityPreference === undefined) {
-            this.qualityPreference = 0;
-        }
-
-        switch (this.qualityPreference) {
-            case 0:
-                return "hd720";
-            case 1:
-                return "medium";
-            case 2:
-                return "small";
-        }
-        return "hd720";
-    },
-
-    _getBitrate: function (itag) {
-        "use strict";
-
-        itag = parseInt(itag);
-        for (var bitrate in this.bitratesToItags) {
-            if (this.bitratesToItags[bitrate].indexOf(itag) !== -1) {
-                return bitrate;
-            }
-        }
-        this._debugMsg("Unexpected itag in _getBitrate: " + itag.toString());
-        return 128;//how we can even get there?
     },
 
     _isValidTrack: function (trackTitle, origTitle) {
